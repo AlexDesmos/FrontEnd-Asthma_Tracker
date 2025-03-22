@@ -13,21 +13,18 @@ function AuthPage({ onSuccessLogin }) {
     setErrorMessage('');
 
     try {
-      // Пример с GET-запросом (oms и password как query-параметры).
-      // Если ваш бэкенд принимает POST, замените на POST и добавьте body.
       const response = await fetch(
-        `http://localhost:8080/api/patients/validate?oms=${oms}&password=${password}`, 
+        `http://localhost:8080/api/patients/validate?oms=${oms}&password=${password}`,
         {
           method: 'GET'
         }
       );
-      // Предположим, бэкенд возвращает JSON: true/false.
       const isValid = await response.json();
 
       if (response.ok && isValid === true) {
-        onSuccessLogin(); // Авторизация успешна, вызываем колбэк из App.js
+        // Передаём oms во внешний колбэк, чтобы запомнить в App.js
+        onSuccessLogin(oms);
       } else {
-        // Либо response.ok=false, либо сервер вернул false
         setErrorMessage('ОМС или пароль неверные');
       }
     } catch (error) {
@@ -37,7 +34,6 @@ function AuthPage({ onSuccessLogin }) {
   };
 
   const goToRegister = () => {
-    // Переход на страницу регистрации
     navigate('/register');
   };
 

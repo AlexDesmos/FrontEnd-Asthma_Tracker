@@ -5,7 +5,7 @@ import MeasurePage from './MeasurePage';
 import ChartsPage from './ChartsPage';
 import UserPage from './UserPage';
 
-function Dashboard() {
+function Dashboard({ userOms }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Основное содержимое */}
@@ -13,7 +13,8 @@ function Dashboard() {
         <Routes>
           <Route path="/" element={<MeasurePage />} />
           <Route path="/charts" element={<ChartsPage />} />
-          <Route path="/user" element={<UserPage />} />
+          {/* Передаём userOms во вкладку Пользователь */}
+          <Route path="/user" element={<UserPage userOms={userOms} />} />
         </Routes>
       </div>
       {/* Нижняя панель навигации для смартфона */}

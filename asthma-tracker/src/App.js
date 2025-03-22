@@ -6,27 +6,30 @@ import Dashboard from './pages/DashBoard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userOms, setUserOms] = useState(''); // Запоминаем ОМС вошедшего пользователя
+
+  // Колбэк для AuthPage: сохранить OМС и выставить isAuthenticated
+  const handleLoginSuccess = (oms) => {
+    setUserOms(oms);
+    setIsAuthenticated(true);
+  };
 
   return (
     <BrowserRouter>
       {isAuthenticated ? (
-        // Если авторизованы, показываем "Dashboard"
-        <Dashboard />
+        // Если авторизованы — показываем Dashboard и передаём userOms
+        <Dashboard userOms={userOms} />
       ) : (
         <Routes>
-          {/* Страница входа */}
           <Route
             path="/"
             element={
-              <AuthPage 
-                onSuccessLogin={() => setIsAuthenticated(true)} 
-              />
+              <AuthPage onSuccessLogin={handleLoginSuccess} />
             }
           />
-          {/* Страница регистрации */}
-          <Route 
-            path="/register" 
-            element={<RegistrationPage />} 
+          <Route
+            path="/register"
+            element={<RegistrationPage />}
           />
         </Routes>
       )}

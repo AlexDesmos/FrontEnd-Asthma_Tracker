@@ -1,62 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-function UserPage() {
-  const [oms, setOms] = useState('');
-  const [patients, setPatients] = useState([]);
+function UserPage({ userOms }) {
+  const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      setPatients([]);
-
-      // Пример GET-запроса на backend:
-      // GET /api/patients?oms=XXXX
-      const response = await fetch(`http://localhost:8080/api/patients?oms=${oms}`);
-      if (!response.ok) {
-        throw new Error('Ошибка при запросе к серверу');
-      }
-
-      const data = await response.json();
-      setPatients(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!userOms) {
+      return;
     }
-  };
+
+    const fetchPatient = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        setPatient(null);
+
+        const response = await fetch(`http://localhost:8080/api/patients?oms=${userOms}`);
+        if (!response.ok) {
+          throw new Error('Ошибка при запросе к серверу');
+        }
+        const data = await response.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          setPatient(data[0]);
+        } else {
+          setError('Пациент с таким ОМС не найден');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatient();
+  }, [userOms]);
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Пользователь</h2>
-      <div>
-        <label>Поиск по ОМС: </label>
-        <input
-          type="text"
-          value={oms}
-          onChange={(e) => setOms(e.target.value)}
-        />
-        <button onClick={handleSearch}>Найти</button>
-      </div>
-
       {loading && <p>Загрузка...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {patients && patients.length > 0 ? (
-        <ul>
-          {patients.map((patient) => (
-            <li key={patient.id}>
-            ФИО: {`${patient.surname} ${patient.name} ${patient.patronymic}`}, 
-            Дата рождения: {patient.birthday}, 
-            Телефон: {patient.phone_number}, 
-            ОМС: {patient.oms}
-          </li>
-          ))}
-        </ul>
-      ) : (
-        !loading && <p>Нет данных для отображения.</p>
+      {/* Если пациент найден, показываем его поля */}
+      {patient && (
+        <div>
+          <p><strong>ФИО:</strong> {patient.surname} {patient.name} {patient.patronymic}</p>
+          <p><strong>Дата рождения:</strong> {patient.birthday}</p>
+          <p><strong>Телефон:</strong> {patient.phone_number}</p>
+          <p><strong>ОМС:</strong> {patient.oms}</p>
+          {/* Добавьте другие поля, если они возвращаются бэкендом */}
+        </div>
       )}
     </div>
   );
