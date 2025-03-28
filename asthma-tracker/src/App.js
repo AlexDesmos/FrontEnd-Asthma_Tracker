@@ -8,29 +8,31 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userOms, setUserOms] = useState(''); // Запоминаем ОМС вошедшего пользователя
 
-  // Колбэк для AuthPage: сохранить OМС и выставить isAuthenticated
   const handleLoginSuccess = (oms) => {
     setUserOms(oms);
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    const confirmed = window.confirm('Вы уверены, что хотите выйти?');
+    if (confirmed) {
+      setIsAuthenticated(false);
+      setUserOms('');
+      alert('Вы успешно вышли');
+    }
+  };
+
   return (
     <BrowserRouter>
       {isAuthenticated ? (
-        // Если авторизованы — показываем Dashboard и передаём userOms
-        <Dashboard userOms={userOms} />
+        <Dashboard userOms={userOms} onLogout={handleLogout} />
       ) : (
         <Routes>
           <Route
             path="/"
-            element={
-              <AuthPage onSuccessLogin={handleLoginSuccess} />
-            }
+            element={<AuthPage onSuccessLogin={handleLoginSuccess} />}
           />
-          <Route
-            path="/register"
-            element={<RegistrationPage />}
-          />
+          <Route path="/register" element={<RegistrationPage />} />
         </Routes>
       )}
     </BrowserRouter>
@@ -38,3 +40,4 @@ function App() {
 }
 
 export default App;
+

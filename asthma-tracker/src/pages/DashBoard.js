@@ -5,22 +5,20 @@ import MeasurePage from './MeasurePage';
 import ChartsPage from './ChartsPage';
 import UserPage from './UserPage';
 
-function Dashboard({ userOms }) {
+function Dashboard({ userOms, onLogout }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Основное содержимое */}
       <div style={{ flex: 1 }}>
         <Routes>
           <Route path="/" element={<MeasurePage />} />
           <Route path="/charts" element={<ChartsPage />} />
-          {/* Передаём userOms во вкладку Пользователь */}
-          <Route path="/user" element={<UserPage userOms={userOms} />} />
+          <Route path="/user" element={<UserPage userOms={userOms} onLogout={onLogout} />} />
         </Routes>
       </div>
-      {/* Нижняя панель навигации для смартфона */}
       <BottomNav />
     </div>
   );
 }
 
 export default Dashboard;
+
