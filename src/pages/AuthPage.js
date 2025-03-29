@@ -6,17 +6,34 @@ function AuthPage({ onSuccessLogin }) {
   const [oms, setOms] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   const navigate = useNavigate();
 
+  // Хук для ловли события установки PWA
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 600);
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  const handleInstall = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('Установка принята');
+        } else {
+          console.log('Установка отменена');
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,37 +64,29 @@ function AuthPage({ onSuccessLogin }) {
   return (
     <div style={{
       display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
       backgroundColor: '#f9f9f9',
       fontFamily: 'Entropia Light',
       overflow: 'hidden',
-      padding: isMobile ? 20 : 0
+      margin: 0,
+      flexDirection: 'column'
     }}>
-      <div style={{
-        marginBottom: isMobile ? 20 : 0,
-        marginRight: isMobile ? 0 : 60,
-        textAlign: 'center',
-        userSelect: 'none'
-      }}>
-        <img
-          src={logo}
-          alt="Логотип"
-          draggable={false}
-          style={{
-            width: isMobile ? 150 : 200,
-            height: 'auto',
-            marginBottom: 10,
-            userSelect: 'none'
-          }}
-        />
-      </div>
+      <img
+        src={logo}
+        alt="Логотип"
+        style={{
+          width: 200,
+          height: 'auto',
+          marginBottom: 20,
+          userSelect: 'none',
+          pointerEvents: 'none'
+        }}
+      />
 
       <div style={{
-        width: isMobile ? '100%' : 320,
-        maxWidth: 400,
+        width: 320,
         padding: 30,
         backgroundColor: 'white',
         border: '1px solid #ddd',
@@ -88,6 +97,7 @@ function AuthPage({ onSuccessLogin }) {
           textAlign: 'center',
           marginBottom: 20,
           fontWeight: 'normal',
+          fontFamily: 'Entropia Light',
           userSelect: 'none'
         }}>
           Авторизация
@@ -156,6 +166,22 @@ function AuthPage({ onSuccessLogin }) {
         }}>
           Регистрация
         </button>
+
+        {deferredPrompt && (
+          <button onClick={handleInstall} style={{
+            marginTop: 20,
+            width: '100%',
+            padding: 10,
+            fontSize: 16,
+            borderRadius: 4,
+            border: '1px solid #3c763d',
+            backgroundColor: '#dff0d8',
+            color: '#3c763d',
+            cursor: 'pointer'
+          }}>
+            📲 Скачать приложение
+          </button>
+        )}
       </div>
     </div>
   );
