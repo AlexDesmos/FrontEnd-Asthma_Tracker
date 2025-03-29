@@ -7,15 +7,18 @@ function AuthPage({ onSuccessLogin }) {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const navigate = useNavigate();
 
-  // Хук для ловли события установки PWA
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
+
+    const mobileCheck = window.matchMedia('(max-width: 768px)').matches;
+    setIsMobile(mobileCheck);
 
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -28,7 +31,7 @@ function AuthPage({ onSuccessLogin }) {
         if (choiceResult.outcome === 'accepted') {
           console.log('Установка принята');
         } else {
-          console.log('Установка отменена');
+          console.log('Установка отклонена');
         }
         setDeferredPrompt(null);
       });
@@ -167,7 +170,7 @@ function AuthPage({ onSuccessLogin }) {
           Регистрация
         </button>
 
-        {deferredPrompt && (
+        {deferredPrompt && isMobile && (
           <button onClick={handleInstall} style={{
             marginTop: 20,
             width: '100%',
