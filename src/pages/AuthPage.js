@@ -7,7 +7,7 @@ function AuthPage({ onSuccessLogin }) {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
 
   const navigate = useNavigate();
 
@@ -17,11 +17,16 @@ function AuthPage({ onSuccessLogin }) {
       setDeferredPrompt(e);
     };
 
-    const mobileCheck = window.matchMedia('(max-width: 768px)').matches;
-    setIsMobile(mobileCheck);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+    };
 
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleInstall = () => {
@@ -67,29 +72,32 @@ function AuthPage({ onSuccessLogin }) {
   return (
     <div style={{
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
       backgroundColor: '#f9f9f9',
       fontFamily: 'Entropia Light',
       overflow: 'hidden',
-      margin: 0,
-      flexDirection: 'column'
+      padding: isMobile ? 20 : 0
     }}>
-      <img
-        src={logo}
-        alt="Логотип"
-        style={{
-          width: 200,
-          height: 'auto',
-          marginBottom: 20,
-          userSelect: 'none',
-          pointerEvents: 'none'
-        }}
-      />
+      <div style={{
+        marginBottom: isMobile ? 20 : 0,
+        marginRight: isMobile ? 0 : 60,
+        textAlign: 'center',
+        userSelect: 'none'
+      }}>
+        <img
+          src={logo}
+          alt="Логотип"
+          draggable={false}
+          style={{ width: isMobile ? 150 : 200, height: 'auto', marginBottom: 10 }}
+        />
+      </div>
 
       <div style={{
-        width: 320,
+        width: isMobile ? '100%' : 320,
+        maxWidth: 400,
         padding: 30,
         backgroundColor: 'white',
         border: '1px solid #ddd',
@@ -100,7 +108,6 @@ function AuthPage({ onSuccessLogin }) {
           textAlign: 'center',
           marginBottom: 20,
           fontWeight: 'normal',
-          fontFamily: 'Entropia Light',
           userSelect: 'none'
         }}>
           Авторизация
