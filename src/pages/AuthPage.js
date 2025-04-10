@@ -49,7 +49,7 @@ function AuthPage({ onSuccessLogin }) {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/patients/validate?oms=${oms}&password=${password}`,
+        `http://91.218.228.129:8080/api/patients/validate?oms=${oms}&password=${password}`,
         { method: 'GET' }
       );
       const isValid = await response.json();

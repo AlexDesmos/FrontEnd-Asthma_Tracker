@@ -25,7 +25,7 @@ function RegistrationPage() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/patients/register', {
+      const response = await fetch('http://91.218.228.129:8080/api/patients/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ oms, password })

@@ -16,7 +16,7 @@ function UserPage({ userOms, onLogout }) {
         setError('');
         setPatient(null);
 
-        const response = await fetch(`http://localhost:8080/api/patients?oms=${userOms}`);
+        const response = await fetch(`http://91.218.228.129:8080/api/patients?oms=${userOms}`);
         if (!response.ok) throw new Error('Ошибка при запросе к серверу');
 
         const data = await response.json();
