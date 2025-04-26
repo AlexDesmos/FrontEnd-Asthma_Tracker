@@ -23,6 +23,7 @@ function AuthPage({ onSuccessLogin }) {
 
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('resize', handleResize);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('resize', handleResize);
@@ -32,12 +33,7 @@ function AuthPage({ onSuccessLogin }) {
   const handleInstall = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('Установка принята');
-        } else {
-          console.log('Установка отклонена');
-        }
+      deferredPrompt.userChoice.then(() => {
         setDeferredPrompt(null);
       });
     }
@@ -55,7 +51,14 @@ function AuthPage({ onSuccessLogin }) {
       const isValid = await response.json();
 
       if (response.ok && isValid === true) {
-        onSuccessLogin(oms);
+        const patientResponse = await fetch(`/api/patients?oms=${oms}`);
+        const patients = await patientResponse.json();
+        if (Array.isArray(patients) && patients.length > 0) {
+          const userId = patients[0].id;
+          onSuccessLogin({ oms, userId });
+        } else {
+          setErrorMessage('Не найден пациент с таким ОМС');
+        }
       } else {
         setErrorMessage('ОМС или пароль неверные');
       }

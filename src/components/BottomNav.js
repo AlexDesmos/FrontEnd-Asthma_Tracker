@@ -6,24 +6,30 @@ import { ReactComponent as IconUser } from '../assets/icons/user.svg';
 
 function BottomNav() {
   const navStyle = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: 60,
     display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
     borderTop: '1px solid #ccc',
     backgroundColor: '#fff',
-    height: 60
+    zIndex: 1000 
   };
 
   const getLinkStyle = ({ isActive }) => ({
     flex: 1,
+    textDecoration: 'none',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    textDecoration: 'none',
     fontSize: '12px',
     color: isActive ? '#1976d2' : '#333',
-    backgroundColor: isActive ? '#e3f2fd' : '#fff',
     borderRight: '1px solid #ccc',
-    height: '100%'
+    height: '100%',
   });
 
   const iconStyle = {
@@ -49,10 +55,8 @@ function BottomNav() {
         <IconUser style={iconStyle} />
         <span>Профиль</span>
       </NavLink>
-
     </div>
   );
 }
 
 export default BottomNav;
-

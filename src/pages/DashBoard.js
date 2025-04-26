@@ -5,20 +5,17 @@ import MeasurePage from './MeasurePage';
 import ChartsPage from './ChartsPage';
 import UserPage from './UserPage';
 
-function Dashboard({ userOms, onLogout }) {
+function Dashboard({ userOms, userId, onLogout }) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1 }}>
-        <Routes>
-          <Route path="/" element={<MeasurePage />} />
-          <Route path="/charts" element={<ChartsPage />} />
-          <Route path="/user" element={<UserPage userOms={userOms} onLogout={onLogout} />} />
-        </Routes>
-      </div>
+    <div>
+      <Routes>
+        <Route path="/" element={<MeasurePage userId={userId} />} />
+        <Route path="/charts" element={<ChartsPage userId={userId}/>} />
+        <Route path="/user" element={<UserPage userOms={userOms} onLogout={onLogout} />} />
+      </Routes>
       <BottomNav />
     </div>
   );
 }
 
 export default Dashboard;
-

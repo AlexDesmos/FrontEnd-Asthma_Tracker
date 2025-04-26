@@ -7,6 +7,8 @@ function UserPage({ userOms, onLogout }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
+
   useEffect(() => {
     if (!userOms) return;
 
@@ -16,7 +18,7 @@ function UserPage({ userOms, onLogout }) {
         setError('');
         setPatient(null);
 
-        const response = await fetch(`/api/patients?oms=${userOms}`);
+        const response = await fetch(`${API_URL}/patients?oms=${userOms}`);
         if (!response.ok) throw new Error('Ошибка при запросе к серверу');
 
         const data = await response.json();
@@ -33,43 +35,107 @@ function UserPage({ userOms, onLogout }) {
     };
 
     fetchPatient();
-  }, [userOms]);
+  }, [userOms, API_URL]);
 
   const handleLogoutClick = () => {
-    onLogout();        // сбрасывает авторизацию
-    navigate('/');     // редиректит на вход
+    onLogout();
+    navigate('/');
+  };
+
+  const getInitials = () => {
+    if (!patient) return '';
+    const name = patient.name || '';
+    const surname = patient.surname || '';
+    return `${name.charAt(0)}${surname.charAt(0)}`.toUpperCase();
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2 style={{ fontWeight: 'normal' }}>Пользователь</h2>
+    <div style={{ padding: '24px 16px 120px', maxWidth: 600, margin: '0 auto', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+        {/* Аватар */}
+        <div
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: '50%',
+            backgroundColor: '#ddd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 32,
+            fontWeight: 600,
+            color: '#444',
+            marginBottom: 12
+          }}
+        >
+          {getInitials()}
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Профиль</h2>
+      </div>
+
       {loading && <p>Загрузка...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
 
       {patient && (
-        <div>
-          <p><strong>ФИО:</strong> {patient.surname} {patient.name} {patient.patronymic}</p>
-          <p><strong>Дата рождения:</strong> {patient.birthday}</p>
-          <p><strong>Телефон:</strong> {patient.phone_number}</p>
-          <p><strong>ОМС:</strong> {patient.oms}</p>
+        <div
+          style={{
+            backgroundColor: '#f6f6f6',
+            borderRadius: 12,
+            padding: 20,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16
+          }}
+        >
+          <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
+          <Info label="🎂 Дата рождения" value={patient.birthday} />
+          <Info label="📞 Телефон" value={patient.phone_number} />
+          <Info label="🩺 ОМС" value={patient.oms} />
         </div>
       )}
 
-      <button
-        onClick={handleLogoutClick}
+      {/* Кнопка выхода */}
+      <div
         style={{
-          marginTop: 30,
-          padding: 10,
-          fontSize: 16,
-          borderRadius: 6,
-          backgroundColor: '#eee',
-          border: '1px solid #aaa',
-          cursor: 'pointer'
+          position: 'fixed',
+          bottom: 70,
+          left: 0,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '0 16px',
+          boxSizing: 'border-box',
         }}
       >
-        Выйти
-      </button>
-      {/*  */}
+        <button
+          onClick={handleLogoutClick}
+          style={{
+            maxWidth: 400,
+            width: '100%',
+            padding: '14px 0',
+            fontSize: 16,
+            fontWeight: 600,
+            borderRadius: 12,
+            backgroundColor: '#e53935',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          Выйти
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div>
+      <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontWeight: 500 }}>{value}</div>
     </div>
   );
 }
