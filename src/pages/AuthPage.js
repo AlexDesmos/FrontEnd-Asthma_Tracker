@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 
 function AuthPage({ onSuccessLogin }) {
+  const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
+
   const [oms, setOms] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -45,13 +47,13 @@ function AuthPage({ onSuccessLogin }) {
 
     try {
       const response = await fetch(
-        `/api/patients/validate?oms=${oms}&password=${password}`,
+        `${API_URL}/patients/validate?oms=${oms}&password=${password}`,
         { method: 'GET' }
-      );
+      );          
       const isValid = await response.json();
 
       if (response.ok && isValid === true) {
-        const patientResponse = await fetch(`/api/patients?oms=${oms}`);
+        const patientResponse = await fetch(`${API_URL}/patients?oms=${oms}`);
         const patients = await patientResponse.json();
         if (Array.isArray(patients) && patients.length > 0) {
           const userId = patients[0].id;

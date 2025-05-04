@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 
 function MeasurePage({ userId }) {
+  const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
+
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -22,7 +24,7 @@ function MeasurePage({ userId }) {
         scale: scale
       };
 
-      const response = await fetch('/api/attacks', {
+      const response = await fetch(`${API_URL}/attacks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(attackData)

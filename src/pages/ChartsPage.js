@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function ChartsPage({ userId }) {
+  const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    if (!userId) return; // если userId ещё нет — ничего не делаем
+    if (!userId) return;
 
     const fetchAttacks = async () => {
       try {
@@ -15,7 +16,7 @@ function ChartsPage({ userId }) {
         const formatDate = (date) => date.toISOString().slice(0, 10);
 
         const response = await fetch(
-          `/api/attacks?patient_id=${userId}&start_date=${formatDate(startDate)}&end_date=${formatDate(now)}`
+          `${API_URL}/attacks?patient_id=${userId}&start_date=${formatDate(startDate)}&end_date=${formatDate(now)}`
         );
         const attacks = await response.json();
 
@@ -31,7 +32,7 @@ function ChartsPage({ userId }) {
     };
 
     fetchAttacks();
-  }, [userId]);
+  }, [userId, API_URL]); // исправлено предупреждение ESLint
 
   return (
     <div style={{ padding: 20 }}>
@@ -55,4 +56,3 @@ function ChartsPage({ userId }) {
 }
 
 export default ChartsPage;
-
