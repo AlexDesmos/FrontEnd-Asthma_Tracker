@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 function MeasurePage({ userId }) {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
-
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [peakFlow, setPeakFlow] = useState('');
 
   const handleAttackClick = () => {
     setShowModal(true);
@@ -21,7 +21,7 @@ function MeasurePage({ userId }) {
       const attackData = {
         patient_id: userId,
         date_time: isoString,
-        scale: scale
+        scale
       };
 
       const response = await fetch(`${API_URL}/attacks`, {
@@ -42,10 +42,92 @@ function MeasurePage({ userId }) {
     }
   };
 
+  const handleSendSpirometry = async () => {
+    const value = parseInt(peakFlow, 10);
+    if (!value || value <= 0) {
+      alert('Введите корректное значение пикфлоуметрии');
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+      const isoString = moscowTime.toISOString().slice(0, 19);
+
+      const body = {
+        patient_id: userId,
+        result: value,
+        date_time: isoString
+      };
+
+      const response = await fetch(`${API_URL}/spirometry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (response.ok) {
+        setPeakFlow('');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      } else {
+        alert('Ошибка при отправке данных пикфлоуметрии.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка подключения к серверу.');
+    }
+  };
+
   return (
     <div style={{ padding: '20px', paddingBottom: '120px', textAlign: 'center' }}>
       <h2>Передать показания</h2>
-      <p>Здесь будет функционал передачи данных, пикового экспираторного потока, дневника симптомов и т.д.</p>
+
+      {/* Поле ввода пикфлоуметрии */}
+      <div style={{
+        position: 'fixed',
+        bottom: 260,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '80%',
+        maxWidth: 300,
+        zIndex: 1000,
+      }}>
+        <label htmlFor="peakFlow" style={{ fontWeight: 'bold', display: 'block', marginBottom: 8, textAlign: 'center' }}>
+          Показания пикфлоуметрии
+        </label>
+        <div style={{
+          display: 'flex',
+          borderRadius: 12,
+          overflow: 'hidden',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)'
+        }}>
+          <input
+            id="peakFlow"
+            type="number"
+            value={peakFlow}
+            onChange={(e) => setPeakFlow(e.target.value)}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              fontSize: 16,
+              border: 'none',
+              outline: 'none'
+            }}
+            placeholder="Введите значение"
+          />
+          <button onClick={handleSendSpirometry} style={{
+            backgroundColor: '#4caf50',
+            color: '#fff',
+            padding: '0 16px',
+            border: 'none',
+            fontSize: 20,
+            cursor: 'pointer'
+          }}>
+            ➔
+          </button>
+        </div>
+      </div>
 
       {/* Кнопка "Приступ" */}
       <div style={{
@@ -131,7 +213,7 @@ function MeasurePage({ userId }) {
         </div>
       )}
 
-      {/* Кастомное окно "Отправлено!" */}
+      {/* Уведомление "Отправлено!" */}
       {showSuccess && (
         <div style={{
           position: 'fixed',
