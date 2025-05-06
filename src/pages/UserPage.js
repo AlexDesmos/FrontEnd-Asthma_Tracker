@@ -5,6 +5,7 @@ function UserPage({ userOms, onLogout }) {
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [medicines, setMedicines] = useState([]);
   const navigate = useNavigate();
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
@@ -36,6 +37,25 @@ function UserPage({ userOms, onLogout }) {
 
     fetchPatient();
   }, [userOms, API_URL]);
+
+  useEffect(() => {
+    if (!patient) return;
+
+    const fetchMedicines = async () => {
+      try {
+        const response = await fetch(`${API_URL}/medicine/by_patient?patient_id=${patient.id}`);
+        if (!response.ok) throw new Error('Ошибка загрузки лекарств');
+
+        const data = await response.json();
+        setMedicines(data.slice(0, 2)); // максимум 2 лекарства
+      } catch (err) {
+        console.error('Ошибка при получении лекарств:', err);
+        setMedicines([]);
+      }
+    };
+
+    fetchMedicines();
+  }, [patient, API_URL]);
 
   const handleLogoutClick = () => {
     onLogout();
@@ -77,22 +97,52 @@ function UserPage({ userOms, onLogout }) {
       {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
 
       {patient && (
-        <div
-          style={{
-            backgroundColor: '#f6f6f6',
-            borderRadius: 12,
-            padding: 20,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16
-          }}
-        >
-          <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
-          <Info label="🎂 Дата рождения" value={patient.birthday} />
-          <Info label="📞 Телефон" value={patient.phone_number} />
-          <Info label="🩺 ОМС" value={patient.oms} />
-        </div>
+        <>
+          <div
+            style={{
+              backgroundColor: '#f6f6f6',
+              borderRadius: 12,
+              padding: 20,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16
+            }}
+          >
+            <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
+            <Info label="🎂 Дата рождения" value={patient.birthday} />
+            <Info label="📞 Телефон" value={patient.phone_number} />
+            <Info label="🩺 ОМС" value={patient.oms} />
+          </div>
+
+          {/* Лекарства */}
+          <div style={{ marginTop: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>💊 Назначенные лекарства</h3>
+            {medicines.length === 0 ? (
+              <div style={{ fontSize: 16, color: '#777', textAlign: 'center' }}>
+                Вам ничего не назначено 😊
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {medicines.map((med, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #eee',
+                      borderRadius: 10,
+                      padding: 14,
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{med.name}</div>
+                    <div style={{ fontSize: 13, color: '#555' }}>{med.mkg} мкг</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Кнопка выхода */}
