@@ -6,23 +6,16 @@ function MeasurePage({ userId }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [peakFlow, setPeakFlow] = useState('');
 
-  const handleAttackClick = () => {
-    setShowModal(true);
-  };
+  const handleAttackClick = () => setShowModal(true);
 
   const handleSelectScale = async (scale) => {
     setShowModal(false);
-
     try {
       const now = new Date();
-      const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+      const moscowTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
       const isoString = moscowTime.toISOString().slice(0, 19);
 
-      const attackData = {
-        patient_id: userId,
-        date_time: isoString,
-        scale
-      };
+      const attackData = { patient_id: userId, date_time: isoString, scale };
 
       const response = await fetch(`${API_URL}/attacks`, {
         method: 'POST',
@@ -51,7 +44,7 @@ function MeasurePage({ userId }) {
 
     try {
       const now = new Date();
-      const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+      const moscowTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
       const isoString = moscowTime.toISOString().slice(0, 19);
 
       const body = {
@@ -80,27 +73,36 @@ function MeasurePage({ userId }) {
   };
 
   return (
-    <div style={{ padding: '20px', paddingBottom: '120px', textAlign: 'center' }}>
-      <h2>Передать показания</h2>
+    <div style={{ padding: '20px', paddingBottom: '160px', textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
+      <h2 style={{ fontSize: '20px', marginBottom: 16 }}>Передать показания</h2>
 
-      {/* Поле ввода пикфлоуметрии */}
+      {/* Блок пикфлоуметрии */}
       <div style={{
         position: 'fixed',
         bottom: 260,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '80%',
-        maxWidth: 300,
+        width: '85%',
+        maxWidth: 360,
         zIndex: 1000,
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 16,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
       }}>
-        <label htmlFor="peakFlow" style={{ fontWeight: 'bold', display: 'block', marginBottom: 8, textAlign: 'center' }}>
+        <label htmlFor="peakFlow" style={{
+          fontWeight: 'bold',
+          display: 'block',
+          marginBottom: 10,
+          fontSize: 16
+        }}>
           Показания пикфлоуметрии
         </label>
         <div style={{
           display: 'flex',
           borderRadius: 12,
           overflow: 'hidden',
-          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)'
+          border: '1px solid #ccc'
         }}>
           <input
             id="peakFlow"
@@ -109,12 +111,12 @@ function MeasurePage({ userId }) {
             onChange={(e) => setPeakFlow(e.target.value)}
             style={{
               flex: 1,
-              padding: '10px 12px',
+              padding: '12px 14px',
               fontSize: 16,
               border: 'none',
               outline: 'none'
             }}
-            placeholder="Введите значение"
+            placeholder="Напр. 400"
           />
           <button onClick={handleSendSpirometry} style={{
             backgroundColor: '#4caf50',
@@ -140,24 +142,23 @@ function MeasurePage({ userId }) {
         <button
           onClick={handleAttackClick}
           style={{
-            width: 150,
-            height: 150,
+            width: 140,
+            height: 140,
             borderRadius: '50%',
             backgroundColor: '#e53935',
             color: '#fff',
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: 'bold',
-            textAlign: 'center',
-            lineHeight: 'normal',
-            padding: 10,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            wordBreak: 'break-word'
+            transition: 'transform 0.2s ease'
           }}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
         >
           Приступ
         </button>
@@ -173,29 +174,28 @@ function MeasurePage({ userId }) {
           height: '100%',
           backgroundColor: 'rgba(0,0,0,0.5)',
           display: 'flex',
-          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 2000
         }}>
           <div style={{
             backgroundColor: '#fff',
-            padding: 20,
-            borderRadius: 10,
-            textAlign: 'center',
+            padding: 24,
+            borderRadius: 16,
             width: '90%',
-            maxWidth: 300
+            maxWidth: 320,
+            textAlign: 'center'
           }}>
-            <h3>Насколько сильный приступ?</h3>
-            <p>1 — не сильный, 5 — очень сильный</p>
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 20 }}>
+            <h3 style={{ marginBottom: 8 }}>Насколько сильный приступ?</h3>
+            <p style={{ marginBottom: 20, fontSize: 14 }}>1 — не сильный, 5 — очень сильный</p>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
               {[1, 2, 3, 4, 5].map(num => (
                 <button
                   key={num}
                   onClick={() => handleSelectScale(num)}
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     borderRadius: '50%',
                     backgroundColor: '#e53935',
                     color: 'white',
@@ -222,12 +222,13 @@ function MeasurePage({ userId }) {
           transform: 'translateX(-50%)',
           backgroundColor: '#4caf50',
           color: 'white',
-          padding: '16px 24px',
+          padding: '14px 22px',
           borderRadius: 12,
-          fontSize: 18,
+          fontSize: 17,
           fontWeight: 'bold',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-          zIndex: 3000
+          zIndex: 3000,
+          animation: 'fadeInOut 2s ease'
         }}>
           Отправлено!
         </div>
