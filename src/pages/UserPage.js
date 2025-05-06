@@ -43,7 +43,7 @@ function UserPage({ userOms, onLogout }) {
 
     const fetchMedicines = async () => {
       try {
-        const response = await fetch(`${API_URL}/medicine/by_patient?patient_id=${patient.id}`);
+        const response = await fetch(`${API_URL}/medicine/by-patient?patient_id=${patient.id}`);
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
