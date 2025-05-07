@@ -59,7 +59,6 @@ function UserPage({ userOms, onLogout }) {
 
   const handleLogoutClick = () => {
     onLogout();
-    navigate('/');
   };
 
   const getInitials = () => {
