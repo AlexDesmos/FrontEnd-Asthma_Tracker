@@ -16,7 +16,7 @@ function BottomNav() {
     alignItems: 'center',
     borderTop: '1px solid #ccc',
     backgroundColor: '#fff',
-    zIndex: 1000 
+    zIndex: 1000,
   };
 
   const getLinkStyle = ({ isActive }) => ({
@@ -26,36 +26,37 @@ function BottomNav() {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '12px',
+    fontSize: 12,
     color: isActive ? '#1976d2' : '#333',
     borderRight: '1px solid #ccc',
     height: '100%',
   });
 
-  const iconStyle = {
-    width: 24,
-    height: 24,
-    marginBottom: 4
-  };
+  const iconStyle = { width: 24, height: 24, marginBottom: 4 };
 
   return (
-    <div style={navStyle}>
-      <NavLink to="/" style={getLinkStyle}>
+    <nav style={navStyle}>
+      <NavLink to="/" end style={getLinkStyle}>
         <IconMeasure style={iconStyle} />
         <span>Показания</span>
       </NavLink>
+
       <NavLink to="/charts" style={getLinkStyle}>
         <IconChart style={iconStyle} />
         <span>Графики</span>
       </NavLink>
-      <NavLink to="/user" style={({ isActive }) => ({
-        ...getLinkStyle({ isActive }),
-        borderRight: 'none'
-      })}>
+
+      <NavLink
+        to="/user"
+        style={({ isActive }) => ({
+          ...getLinkStyle({ isActive }),
+          borderRight: 'none',
+        })}
+      >
         <IconUser style={iconStyle} />
         <span>Профиль</span>
       </NavLink>
-    </div>
+    </nav>
   );
 }
 
