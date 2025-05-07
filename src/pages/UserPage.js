@@ -6,7 +6,6 @@ function UserPage({ userOms, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [medicines, setMedicines] = useState([]);
-  const navigate = useNavigate();
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
 
