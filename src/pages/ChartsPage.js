@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import Header from '../components/Header';
 
 function ChartsPage({ userId }) {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
@@ -71,43 +72,46 @@ function ChartsPage({ userId }) {
   };
 
   return (
-    <div style={{ padding: '16px 12px', maxWidth: 600, margin: '0 auto' }}>
-      {/* График приступов */}
-      <div style={chartContainerStyle}>
-        <div style={titleStyle}>График приступов</div>
-        {attacksData.length === 0 ? (
-          <p style={{ textAlign: 'center' }}>Нет данных для отображения.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={attacksData}>
-              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-              <XAxis dataKey="date" />
-              <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} />
-              <Tooltip />
-              <Line type="monotone" dataKey="scale" stroke="#e53935" strokeWidth={3} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+    <>
+      <Header />
+      <div style={{ padding: '16px 12px', maxWidth: 600, margin: '0 auto' }}>
+        {/* График приступов */}
+        <div style={chartContainerStyle}>
+          <div style={titleStyle}>График приступов</div>
+          {attacksData.length === 0 ? (
+            <p style={{ textAlign: 'center' }}>Нет данных для отображения.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={attacksData}>
+                <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="scale" stroke="#e53935" strokeWidth={3} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
 
-      {/* График пикфлоуметрии */}
-      <div style={chartContainerStyle}>
-        <div style={titleStyle}>Показания пикфлоуметрии</div>
-        {spirometryData.length === 0 ? (
-          <p style={{ textAlign: 'center' }}>Нет данных для отображения.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={spirometryData}>
-              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="result" stroke="#4caf50" strokeWidth={3} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
+        {/* График пикфлоуметрии */}
+        <div style={chartContainerStyle}>
+          <div style={titleStyle}>Показания пикфлоуметрии</div>
+          {spirometryData.length === 0 ? (
+            <p style={{ textAlign: 'center' }}>Нет данных для отображения.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={spirometryData}>
+                <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="result" stroke="#4caf50" strokeWidth={3} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
