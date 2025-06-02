@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Header from '../components/Header';
 
 function UserPage({ userOms, onLogout }) {
   const [patient, setPatient] = useState(null);
@@ -45,7 +46,7 @@ function UserPage({ userOms, onLogout }) {
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
-        setMedicines(data.slice(0, 2)); // максимум 2 лекарства
+        setMedicines(data.slice(0, 2));
       } catch (err) {
         console.error('Ошибка при получении лекарств:', err);
         setMedicines([]);
@@ -67,114 +68,114 @@ function UserPage({ userOms, onLogout }) {
   };
 
   return (
-    <div style={{ padding: '24px 16px 120px', maxWidth: 600, margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-        {/* Аватар */}
-        <div
-          style={{
-            width: 90,
-            height: 90,
-            borderRadius: '50%',
-            backgroundColor: '#ddd',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 32,
-            fontWeight: 600,
-            color: '#444',
-            marginBottom: 12
-          }}
-        >
-          {getInitials()}
-        </div>
-        <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Профиль</h2>
-      </div>
-
-      {loading && <p>Загрузка...</p>}
-      {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
-
-      {patient && (
-        <>
+    <>
+      <Header />
+      <div style={{ padding: '24px 16px 120px', maxWidth: 600, margin: '0 auto', fontFamily: 'sans-serif' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
           <div
             style={{
-              backgroundColor: '#f6f6f6',
-              borderRadius: 12,
-              padding: 20,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+              width: 90,
+              height: 90,
+              borderRadius: '50%',
+              backgroundColor: '#ddd',
               display: 'flex',
-              flexDirection: 'column',
-              gap: 16
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 32,
+              fontWeight: 600,
+              color: '#444',
+             	marginBottom: 12
             }}
           >
-            <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
-            <Info label="🎂 Дата рождения" value={patient.birthday} />
-            <Info label="📞 Телефон" value={patient.phone_number} />
-            <Info label="🩺 ОМС" value={patient.oms} />
+            {getInitials()}
           </div>
+          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Профиль</h2>
+        </div>
 
-          {/* Лекарства */}
-          <div style={{ marginTop: 24 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>💊 Назначенные лекарства</h3>
-            {medicines.length === 0 ? (
-              <div style={{ fontSize: 16, color: '#777', textAlign: 'center' }}>
-                Вам ничего не назначено 😊
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {medicines.map((med, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #eee',
-                      borderRadius: 10,
-                      padding: 14,
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{med.name}</div>
-                    <div style={{ fontSize: 13, color: '#555' }}>{med.mkg} мкг</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
+        {loading && <p>Загрузка...</p>}
+        {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
 
-      {/* Кнопка выхода */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 70,
-          left: 0,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '0 16px',
-          boxSizing: 'border-box',
-        }}
-      >
-        <button
-          onClick={handleLogoutClick}
+        {patient && (
+          <>
+            <div
+              style={{
+                backgroundColor: '#f6f6f6',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16
+              }}
+            >
+              <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
+              <Info label="🎂 Дата рождения" value={patient.birthday} />
+              <Info label="📞 Телефон" value={patient.phone_number} />
+              <Info label="🩺 ОМС" value={patient.oms} />
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>💊 Назначенные лекарства</h3>
+              {medicines.length === 0 ? (
+                <div style={{ fontSize: 16, color: '#777', textAlign: 'center' }}>
+                  Вам ничего не назначено 😊
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {medicines.map((med, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #eee',
+                        borderRadius: 10,
+                        padding: 14,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 15 }}>{med.name}</div>
+                      <div style={{ fontSize: 13, color: '#555' }}>{med.mkg} мкг</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        <div
           style={{
-            maxWidth: 400,
+            position: 'fixed',
+            bottom: 70,
+            left: 0,
             width: '100%',
-            padding: '14px 0',
-            fontSize: 16,
-            fontWeight: 600,
-            borderRadius: 12,
-            backgroundColor: '#e53935',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '0 16px',
+            boxSizing: 'border-box',
           }}
         >
-          Выйти
-        </button>
+          <button
+            onClick={handleLogoutClick}
+            style={{
+              maxWidth: 400,
+              width: '100%',
+              padding: '14px 0',
+              fontSize: 16,
+              fontWeight: 600,
+              borderRadius: 12,
+              backgroundColor: '#e53935',
+              color: '#fff',
+             	border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            Выйти
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
