@@ -4,11 +4,10 @@ import Header from '../components/Header';
 function MeasurePage({ userId }) {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
 
-  // ------------------- state -------------------
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [peakFlow, setPeakFlow] = useState('');
-  const [medicines, setMedicines] = useState([]); // 👈 новое состояние для лекарств
+  const [medicines, setMedicines] = useState([]);
 
   // ------------------- side-effects -------------------
   useEffect(() => {
@@ -29,14 +28,13 @@ function MeasurePage({ userId }) {
     fetchMedicines();
   }, [userId, API_URL]);
 
-  // ------------------- helpers -------------------
+  // Получение даты-времени Московского региона
   const getIsoMoscow = () => {
     const now = new Date();
     const moscowTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
     return moscowTime.toISOString().slice(0, 19);
   };
 
-  // ------------------- handlers -------------------
   const handleAttackClick = () => setShowModal(true);
 
   const handleSelectScale = async (scale) => {
@@ -89,7 +87,6 @@ function MeasurePage({ userId }) {
     }
   };
 
-  // 👇 обработка приёма лекарства
   const handleTakeMedication = async (medicineId) => {
     try {
       const body = {
@@ -116,7 +113,6 @@ function MeasurePage({ userId }) {
     }
   };
 
-  // ------------------- render -------------------
   return (
     <>
       <Header />
