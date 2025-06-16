@@ -19,9 +19,7 @@ function AuthPage({ onSuccessLogin }) {
       setDeferredPrompt(e);
     };
 
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 600);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
 
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('resize', handleResize);
@@ -65,8 +63,7 @@ function AuthPage({ onSuccessLogin }) {
         setErrorMessage('ОМС или пароль неверные');
       }
     } catch (error) {
-      console.error('Ошибка при запросе /validate:', error);
-      setErrorMessage('Произошла ошибка при подключении к серверу');
+      setErrorMessage('Ошибка подключения к серверу');
     }
   };
 
@@ -74,23 +71,25 @@ function AuthPage({ onSuccessLogin }) {
     navigate('/register');
   };
 
+  const goToDoctorLogin = () => {
+    navigate('/doctor-login');
+  };
+
   return (
     <div style={{
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
-      justifyContent: 'center',
+      height: '100vh',
       alignItems: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f9f9f9',
-      fontFamily: 'Entropia Light',
-      overflow: 'hidden',
-      padding: isMobile ? 20 : 0
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #e2ebf0 0%, #cfd9df 100%)'
     }}>
       <div style={{
-        marginBottom: isMobile ? 20 : 0,
-        marginRight: isMobile ? 0 : 60,
-        textAlign: 'center',
-        userSelect: 'none'
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20
       }}>
         <img
           src={logo}
@@ -119,12 +118,12 @@ function AuthPage({ onSuccessLogin }) {
         </h2>
 
         {errorMessage && (
-          <p style={{ color: 'red', textAlign: 'center' }}>{errorMessage}</p>
+          <p style={{ color: 'red', textAlign: 'center', marginBottom: 20 }}>{errorMessage}</p>
         )}
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: 15 }}>
-            <label style={{ display: 'block', marginBottom: 5, userSelect: 'none' }}>ОМС:</label>
+            <label style={{ display: 'block', marginBottom: 5, userSelect: 'none' }}>Полис ОМС:</label>
             <input
               type="text"
               value={oms}
@@ -139,6 +138,7 @@ function AuthPage({ onSuccessLogin }) {
               }}
             />
           </div>
+
           <div style={{ marginBottom: 20 }}>
             <label style={{ display: 'block', marginBottom: 5, userSelect: 'none' }}>Пароль:</label>
             <input
@@ -155,6 +155,7 @@ function AuthPage({ onSuccessLogin }) {
               }}
             />
           </div>
+
           <button type="submit" style={{
             width: '100%',
             padding: 10,
@@ -180,6 +181,19 @@ function AuthPage({ onSuccessLogin }) {
           cursor: 'pointer'
         }}>
           Регистрация
+        </button>
+
+        <button onClick={goToDoctorLogin} style={{
+          marginTop: 16,
+          width: '100%',
+          padding: 10,
+          fontSize: 16,
+          borderRadius: 4,
+          border: '1px solid #aaa',
+          backgroundColor: '#fff9e6',
+          cursor: 'pointer'
+        }}>
+          🩺 Вход для врача
         </button>
 
         {deferredPrompt && isMobile && (
