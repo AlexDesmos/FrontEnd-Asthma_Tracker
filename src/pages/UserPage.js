@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import { differenceInYears, parseISO } from 'date-fns';
 
 function UserPage({ userOms, onLogout }) {
   const [patient, setPatient] = useState(null);
@@ -67,6 +68,15 @@ function UserPage({ userOms, onLogout }) {
     return `${name.charAt(0)}${surname.charAt(0)}`.toUpperCase();
   };
 
+  const getYearWord = (age) => {
+    if (age % 100 >= 11 && age % 100 <= 14) return 'лет';
+    const lastDigit = age % 10;
+    if (lastDigit === 1) return 'год';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'года';
+    return 'лет';
+  };
+
+
   return (
     <>
       <Header />
@@ -84,7 +94,7 @@ function UserPage({ userOms, onLogout }) {
               fontSize: 32,
               fontWeight: 600,
               color: '#444',
-             	marginBottom: 12
+              marginBottom: 12
             }}
           >
             {getInitials()}
@@ -105,11 +115,15 @@ function UserPage({ userOms, onLogout }) {
                 boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 16
+                gap: 12
               }}
             >
               <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
-              <Info label="🎂 Дата рождения" value={patient.birthday} />
+              <Info label="♀️♂️ Пол" value={`${patient.sex}`} />
+              <Info
+                label="🎂 Дата рождения / возраст"
+                value={`${patient.birthday} / ${differenceInYears(new Date(), parseISO(patient.birthday))} ${getYearWord(differenceInYears(new Date(), parseISO(patient.birthday)))}`}
+              />
               <Info label="📞 Телефон" value={patient.phone_number} />
               <Info label="🩺 ОМС" value={patient.oms} />
             </div>
@@ -166,7 +180,7 @@ function UserPage({ userOms, onLogout }) {
               borderRadius: 12,
               backgroundColor: '#e53935',
               color: '#fff',
-             	border: 'none',
+              border: 'none',
               cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             }}
