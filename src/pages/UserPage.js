@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { differenceInYears, parseISO } from 'date-fns';
+import { differenceInYears, parseISO, isValid } from 'date-fns';
 
 function UserPage({ userOms, onLogout }) {
   const [patient, setPatient] = useState(null);
@@ -19,7 +19,7 @@ function UserPage({ userOms, onLogout }) {
         setError('');
         setPatient(null);
 
-        const response = await fetch(`${API_URL}/patients?oms=${userOms}`);
+        const response = await fetch(`${API_URL}/patients?oms=${encodeURIComponent(userOms)}`);
         if (!response.ok) throw new Error('Ошибка при запросе к серверу');
 
         const data = await response.json();
@@ -39,7 +39,7 @@ function UserPage({ userOms, onLogout }) {
   }, [userOms, API_URL]);
 
   useEffect(() => {
-    if (!patient) return;
+    if (!patient?.id) return;
 
     const fetchMedicines = async () => {
       try {
@@ -47,7 +47,7 @@ function UserPage({ userOms, onLogout }) {
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
-        setMedicines(data.slice(0, 2));
+        setMedicines(Array.isArray(data) ? data.slice(0, 2) : []);
       } catch (err) {
         console.error('Ошибка при получении лекарств:', err);
         setMedicines([]);
@@ -63,8 +63,8 @@ function UserPage({ userOms, onLogout }) {
 
   const getInitials = () => {
     if (!patient) return '';
-    const name = patient.name || '';
-    const surname = patient.surname || '';
+    const name = (patient.name || '').trim();
+    const surname = (patient.surname || '').trim();
     return `${name.charAt(0)}${surname.charAt(0)}`.toUpperCase();
   };
 
@@ -76,30 +76,86 @@ function UserPage({ userOms, onLogout }) {
     return 'лет';
   };
 
+  const safeAge = () => {
+    if (!patient?.birthday) return '';
+    try {
+      const d = parseISO(patient.birthday);
+      if (!isValid(d)) return '';
+      const age = differenceInYears(new Date(), d);
+      return `${age} ${getYearWord(age)}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const prettyPhone = (p) => {
+    if (!p) return '—';
+    const digits = String(p).replace(/\D/g, '');
+    // Лёгкое форматирование, если это российский номер
+    if (digits.length === 11 && digits[0] === '8') {
+      return digits.replace(/(\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '+7 ($2) $3-$4-$5');
+    }
+    if (digits.length === 11 && digits[0] === '7') {
+      return digits.replace(/7(\d{3})(\d{3})(\d{2})(\d{2})/, '+7 ($1) $2-$3-$4');
+    }
+    return p;
+  };
+
+  const heightValue = (h) => {
+    if (h === null || h === undefined || h === '') return '—';
+    const num = Number(h);
+    if (Number.isFinite(num)) return `${num} см`;
+    return `${h}`;
+  };
 
   return (
     <>
       <Header />
-      <div style={{ padding: '24px 16px 120px', maxWidth: 600, margin: '0 auto', fontFamily: 'sans-serif' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+      <div
+        style={{
+          padding: '24px 16px 120px',
+          margin: '0 auto',
+          maxWidth: 'min(95vw, 860px)',
+          fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+          lineHeight: 1.4,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: 24,
+            textAlign: 'center',
+          }}
+        >
           <div
             style={{
-              width: 90,
-              height: 90,
+              width: 'clamp(72px, 10vw, 96px)',
+              height: 'clamp(72px, 10vw, 96px)',
               borderRadius: '50%',
-              backgroundColor: '#ddd',
+              backgroundColor: '#e9e9ee',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 32,
-              fontWeight: 600,
-              color: '#444',
-              marginBottom: 12
+              fontSize: 'clamp(24px, 5vw, 32px)',
+              fontWeight: 700,
+              color: '#3c3c43',
+              marginBottom: 12,
+              userSelect: 'none',
             }}
           >
             {getInitials()}
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Профиль</h2>
+          <h2
+            style={{
+              fontSize: 'clamp(18px, 3.5vw, 22px)',
+              fontWeight: 700,
+              margin: 0,
+            }}
+          >
+            Профиль
+          </h2>
         </div>
 
         {loading && <p>Загрузка...</p>}
@@ -109,46 +165,59 @@ function UserPage({ userOms, onLogout }) {
           <>
             <div
               style={{
-                backgroundColor: '#f6f6f6',
-                borderRadius: 12,
-                padding: 20,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12
+                backgroundColor: '#f6f7fb',
+                borderRadius: 14,
+                padding: 'clamp(14px, 2vw, 20px)',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: 'clamp(10px, 1.6vw, 14px)',
               }}
             >
               <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
-              <Info label="♀️♂️ Пол" value={`${patient.sex}`} />
+              <Info label="♀️♂️ Пол" value={patient.sex || '—'} />
               <Info
                 label="🎂 Дата рождения / возраст"
-                value={`${patient.birthday} / ${differenceInYears(new Date(), parseISO(patient.birthday))} ${getYearWord(differenceInYears(new Date(), parseISO(patient.birthday)))}`}
+                value={
+                  patient.birthday
+                    ? `${patient.birthday} / ${safeAge() || '—'}`
+                    : '—'
+                }
               />
-              <Info label="📞 Телефон" value={patient.phone_number} />
+              <Info label="📏 Рост" value={heightValue(patient.height)} />
+              <Info label="📞 Телефон" value={prettyPhone(patient.phone_number)} />
               <Info label="🩺 ОМС" value={patient.oms} />
             </div>
 
             <div style={{ marginTop: 24 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>💊 Назначенные лекарства</h3>
+              <h3 style={{ fontSize: 'clamp(16px, 3vw, 18px)', fontWeight: 700, margin: '0 0 12px' }}>
+                💊 Назначенные лекарства
+              </h3>
               {medicines.length === 0 ? (
-                <div style={{ fontSize: 16, color: '#777', textAlign: 'center' }}>
+                <div style={{ fontSize: 'clamp(14px, 2.6vw, 16px)', color: '#6b7280', textAlign: 'center' }}>
                   Вам ничего не назначено 😊
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: 12,
+                  }}
+                >
                   {medicines.map((med, idx) => (
                     <div
-                      key={idx}
+                      key={`${med.name}-${idx}`}
                       style={{
                         backgroundColor: '#fff',
                         border: '1px solid #eee',
-                        borderRadius: 10,
-                        padding: 14,
+                        borderRadius: 12,
+                        padding: 'clamp(12px, 2vw, 14px)',
                         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>{med.name}</div>
-                      <div style={{ fontSize: 13, color: '#555' }}>{med.mkg} мкг</div>
+                      <div style={{ fontWeight: 700, fontSize: 'clamp(14px, 2.8vw, 15px)' }}>{med.name}</div>
+                      <div style={{ fontSize: 'clamp(12px, 2.4vw, 13px)', color: '#4b5563' }}>{med.mkg} мкг</div>
                     </div>
                   ))}
                 </div>
@@ -172,17 +241,17 @@ function UserPage({ userOms, onLogout }) {
           <button
             onClick={handleLogoutClick}
             style={{
-              maxWidth: 400,
+              maxWidth: 480,
               width: '100%',
               padding: '14px 0',
-              fontSize: 16,
-              fontWeight: 600,
-              borderRadius: 12,
+              fontSize: 'clamp(15px, 3vw, 16px)',
+              fontWeight: 700,
+              borderRadius: 14,
               backgroundColor: '#e53935',
               color: '#fff',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
             }}
           >
             Выйти
@@ -195,9 +264,30 @@ function UserPage({ userOms, onLogout }) {
 
 function Info({ label, value }) {
   return (
-    <div>
-      <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontWeight: 500 }}>{value}</div>
+    <div style={{ minWidth: 0 }}>
+      <div
+        style={{
+          fontSize: 'clamp(12px, 2.3vw, 13px)',
+          color: '#6b7280',
+          marginBottom: 4,
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          overflow: 'hidden',
+        }}
+        title={typeof label === 'string' ? label : undefined}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: 'clamp(14px, 2.8vw, 15px)',
+          wordBreak: 'break-word',
+        }}
+        title={typeof value === 'string' ? value : undefined}
+      >
+        {value}
+      </div>
     </div>
   );
 }
