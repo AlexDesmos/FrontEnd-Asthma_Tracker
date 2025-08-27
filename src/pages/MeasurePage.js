@@ -9,11 +9,8 @@ function MeasurePage({ userId }) {
   const [peakFlow, setPeakFlow] = useState('');
   const [medicines, setMedicines] = useState([]);
 
-  // ------------------- side-effects -------------------
   useEffect(() => {
     if (!userId) return;
-
-    // Загружаем максимум 2 назначенных лекарства для пациента
     const fetchMedicines = async () => {
       try {
         const res = await fetch(`${API_URL}/medicine/by-patient?patient_id=${userId}`);
@@ -24,11 +21,9 @@ function MeasurePage({ userId }) {
         console.error('Ошибка при загрузке лекарств:', err);
       }
     };
-
     fetchMedicines();
   }, [userId, API_URL]);
 
-  // Получение даты-времени Московского региона
   const getIsoMoscow = () => {
     const now = new Date();
     const moscowTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
@@ -61,8 +56,8 @@ function MeasurePage({ userId }) {
 
   const handleSendSpirometry = async () => {
     const value = parseInt(peakFlow, 10);
-    if (!value || value <= 0) {
-      alert('Введите корректное значение пикфлоуметрии');
+    if (!value || value < 50 || value > 950) {
+      alert('Введите корректное значение пикфлоуметрии (от 50 до 950)');
       return;
     }
 
@@ -119,23 +114,19 @@ function MeasurePage({ userId }) {
       <div style={{ padding: '20px', paddingBottom: '160px', textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
         <h2 style={{ fontSize: '20px', marginBottom: 16 }}>Передать показания</h2>
 
-        {/* ---------- Блок лекарств ---------- */}
         {medicines.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
             {medicines.map((med) => (
-              <div
-                key={med.id}
-                style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #eee',
-                  borderRadius: 12,
-                  padding: 16,
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
+              <div key={med.id} style={{
+                backgroundColor: '#fff',
+                border: '1px solid #eee',
+                borderRadius: 12,
+                padding: 16,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}>
                 <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{med.name}</div>
                 <div style={{ fontSize: 14, color: '#555', marginBottom: 12 }}>{med.mkg} мкг</div>
                 <button
@@ -158,7 +149,6 @@ function MeasurePage({ userId }) {
           </div>
         )}
 
-        {/* ---------- Блок пикфлоуметрии ---------- */}
         <div style={{
           position: 'fixed',
           bottom: 260,
@@ -189,6 +179,8 @@ function MeasurePage({ userId }) {
             <input
               id="peakFlow"
               type="number"
+              min="50"
+              max="950"
               value={peakFlow}
               onChange={(e) => setPeakFlow(e.target.value)}
               style={{
@@ -198,7 +190,7 @@ function MeasurePage({ userId }) {
                 border: 'none',
                 outline: 'none'
               }}
-              placeholder="Напр. 400"
+              placeholder="50 - 950"
             />
             <button onClick={handleSendSpirometry} style={{
               backgroundColor: '#4caf50',
