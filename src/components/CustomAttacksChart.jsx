@@ -1,11 +1,6 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/CustomAttacksChart.css';
 
-/**
- * Кастомный SVG-график приступов.
- * Тултип «прилипает» к ближайшей точке и
- * всегда остаётся в пределах видимой области.
- */
 export default function CustomAttacksChart({
   data = [],
   height = 250,
@@ -15,11 +10,35 @@ export default function CustomAttacksChart({
   const svgRef = useRef(null);
   const wrapRef = useRef(null);
   const ttRef = useRef(null);
+
   const [hover, setHover] = useState({ i: null, x: 0, y: 0, leftPx: 0, topPx: 0 });
+
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const [wrapW, setWrapW] = useState(0);
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0].contentRect;
+      setWrapW(r.width);
+    });
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const M = { left: 48, right: 20, top: 18, bottom: 34 };
   const nSegments = Math.max(1, data.length - 1);
-  const VB_WIDTH = Math.max(700, M.left + M.right + minPxPerPoint * nSegments);
+  const VB_WIDTH_BASE = M.left + M.right + minPxPerPoint * nSegments;
+
+  const VB_WIDTH = isMobile
+    ? Math.max(320, wrapW || 320)
+    : Math.max(700, VB_WIDTH_BASE);
+
   const VB_HEIGHT = height;
   const W = VB_WIDTH - M.left - M.right;
   const H = VB_HEIGHT - M.top - M.bottom;
@@ -45,7 +64,6 @@ export default function CustomAttacksChart({
   const stepX = Math.max(1, Math.ceil(labels.length / Math.max(1, maxXTicks)));
   const showLabel = (i) => i % stepX === 0 || i === labels.length - 1;
 
-  // рассчёт и кламп позиции тултипа
   const placeTooltip = (pointX, pointY, i) => {
     const wrapRect = wrapRef.current.getBoundingClientRect();
     const ttRect = ttRef.current ? ttRef.current.getBoundingClientRect() : { width: 160, height: 60 };
@@ -100,12 +118,10 @@ export default function CustomAttacksChart({
             onTouchStart={onTouchMove}
             onTouchMove={onTouchMove}
           >
-            {/* сетка */}
             <g className="grid">
               {ticks.map((t, idx) => <line key={idx} x1={M.left} x2={M.left+W} y1={yAt(t)} y2={yAt(t)} />)}
             </g>
 
-            {/* оси */}
             <g className="axis-y">
               <line x1={M.left} x2={M.left} y1={M.top} y2={M.top+H} />
               {ticks.map((t, idx) => (
@@ -123,14 +139,12 @@ export default function CustomAttacksChart({
               ))}
             </g>
 
-            {/* линия */}
             {linePath && (
               <g className="attacks-line">
                 <path d={linePath} fill="none" />
               </g>
             )}
 
-            {/* точки */}
             <g className="points">
               {data.map((d, i) => (
                 <circle key={i} cx={xAt(i)} cy={yAt(d.value)} r={4} className={i===hover.i ? 'pt active' : 'pt'} />
@@ -138,7 +152,6 @@ export default function CustomAttacksChart({
             </g>
           </svg>
 
-          {/* тултип (позиция — в px, уже клампится) */}
           {hover.i != null && (
             <div
               ref={ttRef}

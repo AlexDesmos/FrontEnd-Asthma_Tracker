@@ -1,10 +1,6 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/CustomPefChart.css';
 
-/**
- * Кастомный SVG-график ПЭФ.
- * Внутренний скролл по X, кламп тултипа по краям контейнера.
- */
 export default function CustomPefChart({
   data = [],
   zones = null,
@@ -18,9 +14,33 @@ export default function CustomPefChart({
   const ttRef = useRef(null);
   const [hover, setHover] = useState({ i: null, x: 0, y: 0, leftPx: 0, topPx: 0 });
 
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const [wrapW, setWrapW] = useState(0);
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0].contentRect;
+      setWrapW(r.width);
+    });
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   const M = { left: 56, right: 20, top: 18, bottom: 50 };
   const nSegments = Math.max(1, data.length - 1);
-  const VB_WIDTH = Math.max(700, M.left + M.right + minPxPerPoint * nSegments);
+
+  const VB_WIDTH_BASE = M.left + M.right + minPxPerPoint * nSegments;
+
+  const VB_WIDTH = isMobile
+    ? Math.max(320, wrapW || 320)
+    : Math.max(700, VB_WIDTH_BASE);
+
   const VB_HEIGHT = height;
   const W = VB_WIDTH - M.left - M.right;
   const H = VB_HEIGHT - M.top - M.bottom;
@@ -138,17 +158,14 @@ export default function CustomPefChart({
             onTouchStart={onTouchMove}
             onTouchMove={onTouchMove}
           >
-            {/* сетка */}
             <g className="grid">
               {ticks.map((t, idx) => <line key={idx} x1={M.left} x2={M.left+W} y1={yAt(t)} y2={yAt(t)} />)}
             </g>
 
-            {/* зоны */}
             {zoneRects.map((r, i) => (
               <g key={i} className={r.cls}><rect x={r.x} y={r.y} width={r.w} height={r.h} rx="2" ry="2" /></g>
             ))}
 
-            {/* оси */}
             <g className="axis-y">
               <line x1={M.left} x2={M.left} y1={M.top} y2={M.top+H} />
               {ticks.map((t, idx) => (
@@ -166,7 +183,6 @@ export default function CustomPefChart({
               ))}
             </g>
 
-            {/* линия нормы */}
             {zones?.norm != null && Number.isFinite(zones.norm) && (
               <g className="pef-norm-line">
                 <line x1={M.left} x2={M.left+W} y1={yAt(zones.norm)} y2={yAt(zones.norm)} />
@@ -174,10 +190,8 @@ export default function CustomPefChart({
               </g>
             )}
 
-            {/* линия ПЭФ */}
             {linePath && <g className="pef-line"><path d={linePath}/></g>}
 
-            {/* точки */}
             <g className="points">
               {data.map((d, i) => (
                 <circle key={i} cx={xAt(i)} cy={yAt(d.value)} r={4} className={i===hover.i ? 'pt active' : 'pt'} />
@@ -185,7 +199,6 @@ export default function CustomPefChart({
             </g>
           </svg>
 
-          {/* тултип */}
           {hover.i != null && (
             <div
               ref={ttRef}
