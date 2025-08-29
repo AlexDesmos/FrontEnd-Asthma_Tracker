@@ -10,7 +10,7 @@ function Dashboard({ userOms, userId, onLogout }) {
     <div>
       <Routes>
         <Route path="/" element={<MeasurePage userId={userId} />} />
-        <Route path="/charts" element={<ChartsPage userId={userId}/>} />
+        <Route path="/charts" element={<ChartsPage userOms={userOms} userId={userId} />} />
         <Route path="/user" element={<UserPage userOms={userOms} onLogout={onLogout} />} />
       </Routes>
       <BottomNav />

@@ -1,0 +1,40 @@
+.chart-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chart-inner { min-width: 100%; }
+
+.attacks-wrap {
+  position: relative; /* для абсолютного тултипа */
+  padding: 6px 8px 2px;
+}
+
+.attacks-svg {
+  width: 100%;
+  display: block;
+}
+
+/* сетка/оси/линии */
+.grid line { stroke: #e6e6e6; stroke-dasharray: 4; }
+.axis-y line, .axis-x line { stroke: #dcdcdc; }
+.axis-y text, .axis-x text { fill: #555; font-size: 12px; }
+
+.attacks-line path { stroke: #e44848; stroke-width: 2; }
+
+.points .pt { fill: #fff; stroke: #e44848; stroke-width: 2; }
+.points .pt.active { fill: #e44848; }
+
+/* тултип — позиционируем по пикселям, без transform */
+.attacks-tooltip {
+  position: absolute;
+  z-index: 2;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 8px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 220px;
+}
+.attacks-tooltip .tt-date { font-weight: 700; margin-bottom: 2px; }
+.attacks-tooltip .tt-val { color: #d33; }

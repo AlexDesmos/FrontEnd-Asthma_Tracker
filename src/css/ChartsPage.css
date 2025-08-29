@@ -1,0 +1,36 @@
+/* Центровка + вертикальный внутренний скролл */
+.charts-page {
+  /* высота подстраиваемая: отнимем условные 120px на шапку/табы */
+  height: calc(100vh - 120px);
+  min-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center; /* центр контейнера по горизонтали */
+  padding: 16px 0;
+}
+
+.charts-container {
+  width: min(100%, 980px);  /* фиксированная «контентная» ширина */
+  margin: 0 auto;           /* центр по странице */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 16px;          /* немного боковых отступов на мобильных */
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  padding: 12px 8px 16px;
+}
+
+.card-title {
+  font-weight: 700;
+  text-align: center;
+  margin: 8px 0 6px;
+}
+
+.center { text-align: center; }
+.muted { color: #888; }
+.error { color: #c00; }
