@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import '../css/MeasurePage.css';
 
 function MeasurePage({ userId }) {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
@@ -119,37 +120,17 @@ function MeasurePage({ userId }) {
   return (
     <>
       <Header />
-      <div style={{ padding: '20px', paddingBottom: '160px', textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
-        <h2 style={{ fontSize: '20px', marginBottom: 16 }}>Передать показания</h2>
+
+      <div className="mp-wrap">
+        <h2 className="mp-title">Передать показания</h2>
 
         {medicines.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
+          <div className="mp-meds">
             {medicines.map((med) => (
-              <div key={med.id} style={{
-                backgroundColor: '#fff',
-                border: '1px solid #eee',
-                borderRadius: 12,
-                padding: 16,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}>
-                <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{med.name}</div>
-                <div style={{ fontSize: 14, color: '#555', marginBottom: 12 }}>{med.mkg} мкг</div>
-                <button
-                  onClick={() => handleTakeMedication(med.id)}
-                  style={{
-                    padding: '8px 24px',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#fff',
-                    backgroundColor: '#1976d2',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                  }}
-                >
+              <div key={med.id} className="mp-med">
+                <div className="mp-med__name">{med.name}</div>
+                <div className="mp-med__dose">{med.mkg} мкг</div>
+                <button className="mp-med__btn" onClick={() => handleTakeMedication(med.id)}>
                   Принять
                 </button>
               </div>
@@ -157,33 +138,9 @@ function MeasurePage({ userId }) {
           </div>
         )}
 
-        <div style={{
-          position: 'fixed',
-          bottom: 260,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '85%',
-          maxWidth: 360,
-          zIndex: 1000,
-          backgroundColor: '#fff',
-          padding: 16,
-          borderRadius: 16,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
-        }}>
-          <label htmlFor="peakFlow" style={{
-            fontWeight: 'bold',
-            display: 'block',
-            marginBottom: 10,
-            fontSize: 16
-          }}>
-            Показания пикфлоуметрии
-          </label>
-          <div style={{
-            display: 'flex',
-            borderRadius: 12,
-            overflow: 'hidden',
-            border: '1px solid #ccc'
-          }}>
+        <div className="mp-spirometry">
+          <label htmlFor="peakFlow">Показания пикфлоуметрии</label>
+          <div className="mp-spirometry__row">
             <input
               id="peakFlow"
               type="number"
@@ -191,84 +148,27 @@ function MeasurePage({ userId }) {
               max="950"
               value={peakFlow}
               onChange={(e) => setPeakFlow(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '12px 14px',
-                fontSize: 16,
-                border: 'none',
-                outline: 'none'
-              }}
               placeholder="50 - 950"
+              inputMode="numeric"
             />
-            <button onClick={handleSendSpirometry} style={{
-              backgroundColor: '#4caf50',
-              color: '#fff',
-              padding: '0 16px',
-              border: 'none',
-              fontSize: 20,
-              cursor: 'pointer'
-            }}>
+            <button className="mp-spirometry__send" onClick={handleSendSpirometry} aria-label="Отправить показание">
               ➔
             </button>
           </div>
         </div>
 
-        {/* ---------- Кнопка "Приступ" ---------- */}
-        <div style={{
-          position: 'fixed',
-          bottom: 90,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-        }}>
-          <button
-            onClick={handleAttackClick}
-            style={{
-              width: 140,
-              height: 140,
-              borderRadius: '50%',
-              backgroundColor: '#e53935',
-              color: '#fff',
-              fontSize: 15,
-              fontWeight: 'bold',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            aria-label="Сообщить о приступе"
-          >
-            Приступ
-          </button>
-        </div>
+        <button className="mp-attack" onClick={handleAttackClick} aria-label="Сообщить о приступе">
+          Приступ
+        </button>
 
-        {/* ---------- Модалка выбора силы приступа + подсказки ---------- */}
         {showModal && (
           <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2000
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
           }}>
             <div style={{
-              backgroundColor: '#fff',
-              padding: 24,
-              borderRadius: 16,
-              width: '92%',
-              maxWidth: 360,
-              textAlign: 'center',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.18)'
+              backgroundColor: '#fff', padding: 24, borderRadius: 16, width: '92%', maxWidth: 360,
+              textAlign: 'center', boxShadow: '0 12px 30px rgba(0,0,0,0.18)'
             }}>
               <h3 style={{ marginBottom: 6 }}>Насколько сильный приступ?</h3>
               <p style={{ marginBottom: 16, fontSize: 14, color: '#6b7280' }}>1 — не сильный, 5 — очень сильный</p>
@@ -279,15 +179,8 @@ function MeasurePage({ userId }) {
                     key={num}
                     onClick={() => handleSelectScale(num)}
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                      backgroundColor: '#e53935',
-                      color: 'white',
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      border: 'none',
-                      cursor: 'pointer',
+                      width: 44, height: 44, borderRadius: '50%', backgroundColor: '#e53935', color: '#fff',
+                      fontSize: 16, fontWeight: 'bold', border: 'none', cursor: 'pointer',
                       boxShadow: '0 3px 10px rgba(229,57,53,0.3)'
                     }}
                     aria-label={`Тяжесть ${num}`}
@@ -298,56 +191,29 @@ function MeasurePage({ userId }) {
                 ))}
               </div>
 
-              {/* Подсказки 1–5 */}
-              <div
-                style={{
-                  textAlign: 'left',
-                  borderTop: '1px solid #eee',
-                  paddingTop: 12,
-                  maxHeight: 220,
-                  overflowY: 'auto'
-                }}
-              >
+              <div style={{
+                textAlign: 'left', borderTop: '1px solid #eee', paddingTop: 12,
+                maxHeight: 220, overflowY: 'auto'
+              }}>
                 {SCALE_HINTS.map(hint => (
                   <div
                     key={hint.n}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '36px 1fr',
-                      gap: 10,
-                      alignItems: 'start',
-                      padding: '8px 10px',
-                      borderRadius: 12,
-                      background: hint.n === 5 ? '#fff5f5' : '#fafafa',
-                      border: '1px solid #f0f0f0',
-                      marginBottom: 8
+                      display: 'grid', gridTemplateColumns: '36px 1fr', gap: 10, alignItems: 'start',
+                      padding: '8px 10px', borderRadius: 12, background: hint.n === 5 ? '#fff5f5' : '#fafafa',
+                      border: '1px solid #f0f0f0', marginBottom: 8
                     }}
                   >
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: '#e53935',
-                        color: '#fff',
-                        fontWeight: 800,
-                        fontSize: 14,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(229,57,53,0.25)'
-                      }}
-                    >
+                    <div aria-hidden="true" style={{
+                      width: 32, height: 32, borderRadius: 8, background: '#e53935', color: '#fff',
+                      fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(229,57,53,0.25)'
+                    }}>
                       {hint.n}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>
-                        {hint.title}
-                      </div>
-                      <div style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.35 }}>
-                        {hint.text}
-                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{hint.title}</div>
+                      <div style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.35 }}>{hint.text}</div>
                     </div>
                   </div>
                 ))}
@@ -356,15 +222,8 @@ function MeasurePage({ userId }) {
               <button
                 onClick={() => setShowModal(false)}
                 style={{
-                  marginTop: 12,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 14px',
-                  borderRadius: 12,
-                  border: '1px solid #e5e7eb',
-                  background: '#fff',
-                  cursor: 'pointer',
+                  marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer',
                   fontWeight: 600
                 }}
               >
@@ -374,7 +233,7 @@ function MeasurePage({ userId }) {
           </div>
         )}
 
-        {/* ---------- Уведомление "Отправлено!" ---------- */}
+        {/* Уведомление "Отправлено!" */}
         {showSuccess && (
           <div style={{
             position: 'fixed',
