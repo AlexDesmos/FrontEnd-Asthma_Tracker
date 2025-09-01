@@ -1,25 +1,16 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import '../css/CustomMedicineHeatmap.css';
 
-/**
- * props:
- * - rows: [{ key, title, sub, data:[{date,dateFull,count,times[]}] }]
- * - dates: [{ label, labelFull, iso }]
- * - height?: number
- * - cellMinWidth?: number
- * - bottomSafe?: number   // "запретная" нижняя зона (px) — высота нижней панели. По умолчанию 96.
- */
 export default function CustomMedicineHeatmap({
   rows = [],
   dates = [],
   height = 320,
   cellMinWidth = 64,
-  bottomSafe = 96, // нижняя панель/табы
+  bottomSafe = 96,
 }) {
   const wrapRef = useRef(null);
   const ttRef = useRef(null);
 
-  // responsive
   const [wrapW, setWrapW] = useState(1024);
   const isMobile = wrapW < 540;
   const isTablet = wrapW >= 540 && wrapW < 900;
@@ -33,8 +24,7 @@ export default function CustomMedicineHeatmap({
     return () => ro.disconnect();
   }, []);
 
-  // tooltip
-  const [tooltip, setTooltip] = useState(null); // {x,y, html}
+  const [tooltip, setTooltip] = useState(null);
   const [pinned, setPinned] = useState(false);
 
   const makeHtml = (rowTitle, cell) => {
@@ -49,17 +39,15 @@ export default function CustomMedicineHeatmap({
     `;
   };
 
-  /** Вычисляем позицию тултипа относительно ВЬЮПОРТА с авто-флипом вверх/вниз */
   const calcPositionByCell = useCallback((cellEl) => {
-    const pad = 8; // "внешний" отступ от краёв
-    const arrowGap = 8; // зазор между ячейкой и тултипом
+    const pad = 8;
+    const arrowGap = 8;
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const safeBottom = bottomSafe + (parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0);
 
     const rect = cellEl.getBoundingClientRect();
-    // Базовая ширина/высота тултипа (если ещё не отрисован)
     let tw = 240, th = 120;
     if (ttRef.current) {
       const tr = ttRef.current.getBoundingClientRect();
@@ -67,19 +55,15 @@ export default function CustomMedicineHeatmap({
       th = tr.height;
     }
 
-    // Пытаемся поставить СНИЗУ от ячейки, центрируя по X
     let x = rect.left + rect.width / 2 - tw / 2;
     let y = rect.bottom + arrowGap;
 
-    // Если снизу не влезает — ставим ВЫШЕ ячейки
     if (y + th > vh - safeBottom - pad) {
       y = rect.top - th - arrowGap;
     }
-    // Если и сверху не влезает — "прижимаем" к верхнему/нижнему краю
     if (y < pad) y = pad;
     if (y + th > vh - safeBottom - pad) y = vh - safeBottom - pad - th;
 
-    // Кламп по ширине вьюпорта
     if (x < pad) x = pad;
     if (x + tw > vw - pad) x = vw - pad - tw;
 
@@ -91,11 +75,9 @@ export default function CustomMedicineHeatmap({
     setTooltip({ x: pos.x, y: pos.y, html: makeHtml(rowTitle, cell) });
   }, [calcPositionByCell]);
 
-  // при изменении размеров окна — поправить позицию закреплённого тултипа (если есть ref)
   useEffect(() => {
     const onWinResize = () => {
       if (!pinned || !ttRef.current) return;
-      // если закреплён — оставим на месте, но не даём вылезти за края
       const tr = ttRef.current.getBoundingClientRect();
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -140,7 +122,6 @@ export default function CustomMedicineHeatmap({
 
   const onWrapClick = () => { setPinned(false); setTooltip(null); };
 
-  // GRID TEMPLATE
   const gridTemplate = useMemo(() => {
     if (isMobile)       return `minmax(120px, 1.3fr) repeat(${dates.length}, 1fr)`;
     if (isTablet)       return `minmax(160px, 1.1fr) repeat(${dates.length}, 1fr)`;
@@ -210,7 +191,7 @@ export default function CustomMedicineHeatmap({
         <div
           ref={ttRef}
           className="med-heat-tooltip"
-          style={{ left: tooltip.x, top: tooltip.y, position: 'fixed' }} // фикс к вьюпорту
+          style={{ left: tooltip.x, top: tooltip.y, position: 'fixed' }}
         >
           <div dangerouslySetInnerHTML={{ __html: tooltip.html }} />
         </div>
