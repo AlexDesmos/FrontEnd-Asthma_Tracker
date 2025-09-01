@@ -58,9 +58,7 @@ export default function CustomMedicineHeatmap({
     let x = rect.left + rect.width / 2 - tw / 2;
     let y = rect.bottom + arrowGap;
 
-    if (y + th > vh - safeBottom - pad) {
-      y = rect.top - th - arrowGap;
-    }
+    if (y + th > vh - safeBottom - pad) y = rect.top - th - arrowGap;
     if (y < pad) y = pad;
     if (y + th > vh - safeBottom - pad) y = vh - safeBottom - pad - th;
 
@@ -93,6 +91,29 @@ export default function CustomMedicineHeatmap({
     window.addEventListener('resize', onWinResize);
     return () => window.removeEventListener('resize', onWinResize);
   }, [pinned, tooltip, bottomSafe]);
+
+  useEffect(() => {
+    const onGlobalPointerDown = (e) => {
+      if (wrapRef.current && wrapRef.current.contains(e.target)) return;
+      if (ttRef.current && ttRef.current.contains?.(e.target)) return;
+      setPinned(false);
+      setTooltip(null);
+    };
+
+    const onGlobalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setPinned(false);
+        setTooltip(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', onGlobalPointerDown, true);
+    document.addEventListener('keydown', onGlobalKeyDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', onGlobalPointerDown, true);
+      document.removeEventListener('keydown', onGlobalKeyDown, true);
+    };
+  }, []);
 
   const onCellEnter = (e, cell, rowTitle) => {
     if (pinned) return;
