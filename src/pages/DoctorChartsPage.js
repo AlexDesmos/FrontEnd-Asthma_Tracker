@@ -4,6 +4,7 @@ import CustomAttacksChart from '../components/CustomAttacksChart';
 import CustomPefChart from '../components/CustomPefChart';
 import CustomMedicineHeatmap from '../components/CustomMedicineHeatmap';
 import { buildPefZonesForPatient } from '../utils/pefZones';
+import { ymdLocal, fmtShortDate, fmtFullDateTime, fmtTime } from '../utils/dateUtils';
 
 const LS_KEY = 'doctor_charts_state_v2';
 
@@ -25,35 +26,12 @@ function DoctorChartsPage() {
 
   const inputRef = useRef(null);
 
-  const ymdLocal = (input) => {
-    const d = (input instanceof Date) ? input : new Date(input);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
   const getDaysRange = (n = 14) => {
     const end = new Date();
     const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (n - 1));
     return [start, end];
   };
   const toIso = (d) => ymdLocal(d);
-
-  const fmtShortDate = (iso) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }).replace(/\./g, '-');
-  };
-  const fmtFullDateTime = (iso) => {
-    const d = new Date(iso);
-    const date = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '-');
-    const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  };
-  const fmtTime = (iso) => {
-    const d = new Date(iso);
-    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  };
 
   const buildLastNDates = (n = 7) => {
     const arr = [];
