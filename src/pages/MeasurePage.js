@@ -9,6 +9,14 @@ function MeasurePage({ userId }) {
   const [peakFlow, setPeakFlow] = useState('');
   const [medicines, setMedicines] = useState([]);
 
+  const SCALE_HINTS = [
+    { n: 1, title: 'Очень лёгкий', text: 'Лёгкое покашливание, дыхание почти как обычно.' },
+    { n: 2, title: 'Лёгкий', text: 'Небольшая одышка при активности, без ночных симптомов.' },
+    { n: 3, title: 'Умеренный', text: 'Регулярные симптомы, мешают делам, возможны ночные пробуждения.' },
+    { n: 4, title: 'Тяжёлый', text: 'Одышка даже в покое, спасательное лекарство помогает слабо.' },
+    { n: 5, title: 'Угрожающий жизни', text: 'Трудно говорить, выраженная слабость/синюшность — срочно нужна помощь.' },
+  ];
+
   useEffect(() => {
     if (!userId) return;
     const fetchMedicines = async () => {
@@ -233,12 +241,13 @@ function MeasurePage({ userId }) {
             }}
             onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
             onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            aria-label="Сообщить о приступе"
           >
             Приступ
           </button>
         </div>
 
-        {/* ---------- Модалка выбора силы приступа ---------- */}
+        {/* ---------- Модалка выбора силы приступа + подсказки ---------- */}
         {showModal && (
           <div style={{
             position: 'fixed',
@@ -256,33 +265,111 @@ function MeasurePage({ userId }) {
               backgroundColor: '#fff',
               padding: 24,
               borderRadius: 16,
-              width: '90%',
-              maxWidth: 320,
-              textAlign: 'center'
+              width: '92%',
+              maxWidth: 360,
+              textAlign: 'center',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.18)'
             }}>
-              <h3 style={{ marginBottom: 8 }}>Насколько сильный приступ?</h3>
-              <p style={{ marginBottom: 20, fontSize: 14 }}>1 — не сильный, 5 — очень сильный</p>
-              <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <h3 style={{ marginBottom: 6 }}>Насколько сильный приступ?</h3>
+              <p style={{ marginBottom: 16, fontSize: 14, color: '#6b7280' }}>1 — не сильный, 5 — очень сильный</p>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
                 {[1, 2, 3, 4, 5].map(num => (
                   <button
                     key={num}
                     onClick={() => handleSelectScale(num)}
                     style={{
-                      width: 42,
-                      height: 42,
+                      width: 44,
+                      height: 44,
                       borderRadius: '50%',
                       backgroundColor: '#e53935',
                       color: 'white',
                       fontSize: 16,
                       fontWeight: 'bold',
                       border: 'none',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      boxShadow: '0 3px 10px rgba(229,57,53,0.3)'
                     }}
+                    aria-label={`Тяжесть ${num}`}
+                    title={`Тяжесть ${num}`}
                   >
                     {num}
                   </button>
                 ))}
               </div>
+
+              {/* Подсказки 1–5 */}
+              <div
+                style={{
+                  textAlign: 'left',
+                  borderTop: '1px solid #eee',
+                  paddingTop: 12,
+                  maxHeight: 220,
+                  overflowY: 'auto'
+                }}
+              >
+                {SCALE_HINTS.map(hint => (
+                  <div
+                    key={hint.n}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '36px 1fr',
+                      gap: 10,
+                      alignItems: 'start',
+                      padding: '8px 10px',
+                      borderRadius: 12,
+                      background: hint.n === 5 ? '#fff5f5' : '#fafafa',
+                      border: '1px solid #f0f0f0',
+                      marginBottom: 8
+                    }}
+                  >
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: '#e53935',
+                        color: '#fff',
+                        fontWeight: 800,
+                        fontSize: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 8px rgba(229,57,53,0.25)'
+                      }}
+                    >
+                      {hint.n}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>
+                        {hint.title}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.35 }}>
+                        {hint.text}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  marginTop: 12,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #e5e7eb',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Закрыть
+              </button>
             </div>
           </div>
         )}
