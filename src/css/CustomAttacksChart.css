@@ -5,7 +5,7 @@
 .chart-inner { min-width: 100%; }
 
 .attacks-wrap {
-  position: relative; /* для абсолютного тултипа */
+  position: relative;
   padding: 6px 8px 2px;
 }
 
@@ -14,7 +14,6 @@
   display: block;
 }
 
-/* сетка/оси/линии */
 .grid line { stroke: #e6e6e6; stroke-dasharray: 4; }
 .axis-y line, .axis-x line { stroke: #dcdcdc; }
 .axis-y text, .axis-x text { fill: #555; font-size: 12px; }
@@ -24,7 +23,6 @@
 .points .pt { fill: #fff; stroke: #e44848; stroke-width: 2; }
 .points .pt.active { fill: #e44848; }
 
-/* тултип — позиционируем по пикселям, без transform */
 .attacks-tooltip {
   position: absolute;
   z-index: 2;

@@ -1,21 +1,19 @@
-/* Центровка + вертикальный внутренний скролл */
 .charts-page {
-  /* высота подстраиваемая: отнимем условные 120px на шапку/табы */
   height: calc(100vh - 120px);
   min-height: 480px;
   overflow-y: auto;
   display: flex;
-  justify-content: center; /* центр контейнера по горизонтали */
+  justify-content: center;
   padding: 16px 0;
 }
 
 .charts-container {
-  width: min(100%, 980px);  /* фиксированная «контентная» ширина */
-  margin: 0 auto;           /* центр по странице */
+  width: min(100%, 980px);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 0 16px;          /* немного боковых отступов на мобильных */
+  padding: 0 16px;
 }
 
 .card {
