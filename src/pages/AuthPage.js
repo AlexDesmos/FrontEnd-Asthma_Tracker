@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 
@@ -12,18 +12,17 @@ function AuthPage({ onSuccessLogin }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const navigate = useNavigate();
+  const formRef = useRef(null);
 
   useEffect(() => {
     const beforeInstallHandler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
-
     const handleResize = () => setIsMobile(window.innerWidth < 768);
 
     window.addEventListener('beforeinstallprompt', beforeInstallHandler);
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('beforeinstallprompt', beforeInstallHandler);
       window.removeEventListener('resize', handleResize);
@@ -33,9 +32,22 @@ function AuthPage({ onSuccessLogin }) {
   const handleInstall = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.finally(() => {
-        setDeferredPrompt(null);
-      });
+      deferredPrompt.userChoice.finally(() => setDeferredPrompt(null));
+    }
+  };
+
+  const saveCredentialsIfSupported = async (id, pwd) => {
+    try {
+      if ('credentials' in navigator && window.PasswordCredential) {
+        const cred = new window.PasswordCredential({
+          id,
+          password: pwd,
+          name: id,
+        });
+        await navigator.credentials.store(cred);
+      }
+    } catch {
+      
     }
   };
 
@@ -44,17 +56,21 @@ function AuthPage({ onSuccessLogin }) {
     setErrorMessage('');
 
     try {
-      const response = await fetch(
-        `${API_URL}/patients/validate?oms=${oms}&password=${password}`,
-        { method: 'GET' }
-      );
+      const response = await fetch(`${API_URL}/patients/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oms, password }),
+      });
+
       const isValid = await response.json();
 
       if (response.ok && isValid === true) {
-        const patientResponse = await fetch(`${API_URL}/patients?oms=${oms}`);
+        const patientResponse = await fetch(`${API_URL}/patients?oms=${encodeURIComponent(oms)}`);
         const patients = await patientResponse.json();
 
         if (Array.isArray(patients) && patients.length > 0) {
+          await saveCredentialsIfSupported(oms, password);
+
           const userId = patients[0].id;
           onSuccessLogin({ oms, userId });
         } else {
@@ -85,7 +101,7 @@ function AuthPage({ onSuccessLogin }) {
         gap: isMobile ? 20 : 40
       }}
     >
-      {/* Логотип и надпись */}
+      {/* Логотип */}
       <div
         style={{
           flexShrink: 0,
@@ -136,13 +152,24 @@ function AuthPage({ onSuccessLogin }) {
           <p style={{ color: 'red', textAlign: 'center', marginBottom: 20 }}>{errorMessage}</p>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form
+          ref={formRef}
+          onSubmit={handleLogin}
+          autoComplete="on"
+        >
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', marginBottom: 6 }}>Полис ОМС:</label>
+            <label htmlFor="oms" style={{ display: 'block', marginBottom: 6 }}>Полис ОМС:</label>
             <input
+              id="oms"
+              name="username" 
+              autoComplete="username"
               type="text"
+              inputMode="numeric"
+              autoCapitalize="off"
+              autoCorrect="off"
               value={oms}
               onChange={(e) => setOms(e.target.value)}
+              autoFocus
               style={{
                 width: '100%',
                 padding: 14,
@@ -155,8 +182,11 @@ function AuthPage({ onSuccessLogin }) {
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', marginBottom: 6 }}>Пароль:</label>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: 6 }}>Пароль:</label>
             <input
+              id="password"
+              name="current-password"
+              autoComplete="current-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
