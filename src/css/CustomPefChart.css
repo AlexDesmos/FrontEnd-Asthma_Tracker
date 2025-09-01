@@ -5,7 +5,7 @@
 .chart-inner { min-width: 100%; }
 
 .pef-wrap {
-  position: relative; /* для абсолютного тултипа */
+  position: relative;
   padding: 6px 8px 2px;
 }
 
@@ -14,17 +14,14 @@
   display: block;
 }
 
-/* сетка и оси */
 .grid line { stroke: #e6e6e6; stroke-dasharray: 4; }
 .axis-y line, .axis-x line { stroke: #dcdcdc; }
 .axis-y text, .axis-x text { fill: #555; font-size: 12px; }
 
-/* зоны */
 .pef-zone-red rect    { fill: #ffb3b3; opacity: .4; }
 .pef-zone-yellow rect { fill: #ffe8a6; opacity: .5; }
 .pef-zone-green rect  { fill: #b7f1c9; opacity: .4; }
 
-/* линия нормы и графика */
 .pef-norm-line line { stroke: #6aa96c; stroke-dasharray: 6; }
 .pef-norm-line text { fill: #6aa96c; font-size: 12px; }
 .pef-line path { stroke: #45a049; stroke-width: 2; fill: none; }
@@ -32,7 +29,6 @@
 .points .pt { fill: #fff; stroke: #45a049; stroke-width: 2; }
 .points .pt.active { fill: #45a049; }
 
-/* тултип — ограничиваемся контейнером, позиция в px */
 .pef-tooltip {
   position: absolute;
   z-index: 2;
