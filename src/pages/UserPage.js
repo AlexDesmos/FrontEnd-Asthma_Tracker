@@ -11,6 +11,27 @@ function UserPage({ userOms, onLogout }) {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
 
   useEffect(() => {
+    const prevHtmlOverflowX = document.documentElement.style.overflowX;
+    const prevBodyOverflowX = document.body.style.overflowX;
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute('data-userpage-global', 'true');
+    styleEl.innerHTML = `
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { overflow-x: hidden !important; width: 100%; }
+    `;
+    document.head.appendChild(styleEl);
+
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+
+    return () => {
+      document.documentElement.style.overflowX = prevHtmlOverflowX;
+      document.body.style.overflowX = prevBodyOverflowX;
+      styleEl.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!userOms) return;
 
     const fetchPatient = async () => {
@@ -56,8 +77,6 @@ function UserPage({ userOms, onLogout }) {
 
     fetchMedicines();
   }, [patient, API_URL]);
-
-  const handleLogoutClick = () => onLogout();
 
   const getInitials = () => {
     if (!patient) return '';
@@ -107,156 +126,144 @@ function UserPage({ userOms, onLogout }) {
 
   return (
     <>
-      <Header />
+      <Header onLogout={onLogout} />
+
       <div
         style={{
-          width: '100%',
-          height: 'calc(85vh - 90px)',
-          overflowY: 'auto',
-          padding: '0 12px 90px',
-          boxSizing: 'border-box',
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
+          minHeight: '100dvh',
+          height: '100svh',
+          boxSizing: 'border-box',
+          background: '#ffffff',
+          overflowX: 'hidden',
+          width: '100%',
         }}
       >
-        <div
+        <main
           style={{
-            width: 'min(95vw, 860px)',
-            margin: '0 auto',
-            padding: '24px 16px',
-            fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-            lineHeight: 1.4,
+            flex: 1,
+            WebkitOverflowScrolling: 'touch',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            overscrollBehavior: 'contain',
+            padding: `0 12px calc(105px + env(safe-area-inset-bottom, 0px))`,
+            scrollbarGutter: 'stable both-edges',
           }}
         >
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              marginBottom: 24,
-              textAlign: 'center',
+              maxWidth: 860,
+              width: '100%',
+              margin: '0 auto',
+              padding: '24px 16px',
+              fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+              lineHeight: 1.4,
             }}
           >
             <div
               style={{
-                width: 90,
-                height: 90,
-                borderRadius: '50%',
-                backgroundColor: '#e9e9ee',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 28,
-                fontWeight: 700,
-                color: '#3c3c43',
-                marginBottom: 12,
-                userSelect: 'none',
+                marginBottom: 24,
+                textAlign: 'center',
               }}
             >
-              {getInitials()}
-            </div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Профиль</h2>
-          </div>
-
-          {loading && <p>Загрузка...</p>}
-          {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
-
-          {patient && (
-            <>
               <div
                 style={{
-                  backgroundColor: '#f6f7fb',
-                  borderRadius: 14,
-                  padding: 20,
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr',
-                  gap: 14,
-                  marginBottom: 20,
+                  width: 90,
+                  height: 90,
+                  borderRadius: '50%',
+                  backgroundColor: '#e9e9ee',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: '#3c3c43',
+                  marginBottom: 12,
+                  userSelect: 'none',
+                  flex: '0 0 auto',
                 }}
               >
-                <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
-                <Info label="♀️♂️ Пол" value={patient.sex || '—'} />
-                <Info
-                  label="🎂 Дата рождения / возраст"
-                  value={patient.birthday ? `${patient.birthday} / ${safeAge() || '—'}` : '—'}
-                />
-                <Info label="📏 Рост" value={heightValue(patient.height)} />
-                <Info label="📞 Телефон" value={prettyPhone(patient.phone_number)} />
-                <Info label="🩺 ОМС" value={patient.oms} />
+                {getInitials()}
               </div>
+              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Профиль</h2>
+            </div>
 
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px' }}>
-                  💊 Назначенные лекарства
-                </h3>
-                {medicines.length === 0 ? (
-                  <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
-                    Вам ничего не назначено 😊
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                      gap: 12,
-                    }}
-                  >
-                    {medicines.map((med, idx) => (
-                      <div
-                        key={`${med.name}-${idx}`}
-                        style={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #eee',
-                          borderRadius: 12,
-                          padding: 14,
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, fontSize: 15 }}>{med.name}</div>
-                        <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg} мкг</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+            {loading && <p>Загрузка...</p>}
+            {error && <p style={{ color: 'red', marginBottom: 16 }}>{error}</p>}
 
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 'calc(64px + env(safe-area-inset-bottom) + 10px)',
-          left: 0,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '0 16px',
-          boxSizing: 'border-box',
-          zIndex: 1000,
-        }}
-      >
-        <button
-          onClick={handleLogoutClick}
-          style={{
-            maxWidth: 480,
-            width: '100%',
-            height: 56,
-            padding: '0 16px',
-            fontSize: 16,
-            fontWeight: 700,
-            borderRadius: 14,
-            backgroundColor: '#e53935',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
-          }}
-        >
-          Выйти
-        </button>
+            {patient && (
+              <>
+                <div
+                  style={{
+                    backgroundColor: '#f6f7fb',
+                    borderRadius: 14,
+                    padding: 20,
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: 14,
+                    marginBottom: 20,
+                  }}
+                >
+                  <Info label="👤 ФИО" value={`${patient.surname} ${patient.name} ${patient.patronymic}`} />
+                  <Info label="♀️♂️ Пол" value={patient.sex || '—'} />
+                  <Info
+                    label="🎂 Дата рождения / возраст"
+                    value={patient.birthday ? `${patient.birthday} / ${safeAge() || '—'}` : '—'}
+                  />
+                  <Info label="📏 Рост" value={heightValue(patient.height)} />
+                  <Info label="📞 Телефон" value={prettyPhone(patient.phone_number)} />
+                  <Info label="🩺 ОМС" value={patient.oms} />
+                </div>
+
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px' }}>
+                    💊 Назначенные лекарства
+                  </h3>
+                  {medicines.length === 0 ? (
+                    <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
+                      Вам ничего не назначено 😊
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: 12,
+                        width: '100%',
+                      }}
+                    >
+                      {medicines.map((med, idx) => (
+                        <div
+                          key={`${med.name}-${idx}`}
+                          style={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #eee',
+                            borderRadius: 12,
+                            padding: 14,
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                            minWidth: 0,
+                            wordBreak: 'break-word',
+                            overflowWrap: 'anywhere',
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>
+                            {med.name}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg} мкг</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </main>
       </div>
     </>
   );
@@ -266,7 +273,9 @@ function Info({ label, value }) {
   return (
     <div style={{ minWidth: 0 }}>
       <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontWeight: 600, fontSize: 15 }}>{value}</div>
+      <div style={{ fontWeight: 600, fontSize: 15, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        {value}
+      </div>
     </div>
   );
 }
