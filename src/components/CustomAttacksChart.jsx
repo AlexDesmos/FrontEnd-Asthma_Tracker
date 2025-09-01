@@ -159,7 +159,7 @@ export default function CustomAttacksChart({
               style={{ left: `${hover.leftPx}px`, top: `${hover.topPx}px` }}
             >
               <div className="tt-date">{data[hover.i].labelFull ?? data[hover.i].label}</div>
-              <div className="tt-val">Шкала: {data[hover.i].value}</div>
+              <div className="tt-val">Тяжесть: {data[hover.i].value}</div>
             </div>
           )}
         </div>

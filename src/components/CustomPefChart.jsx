@@ -206,7 +206,7 @@ export default function CustomPefChart({
               style={{ left: `${hover.leftPx}px`, top: `${hover.topPx}px` }}
             >
               <div className="tt-date">{data[hover.i].labelFull ?? data[hover.i].label}</div>
-              <div className="tt-val">ПЭФ: {data[hover.i].value} л/мин</div>
+              <div className="tt-val">Результат: {data[hover.i].value} л/мин</div>
             </div>
           )}
         </div>
