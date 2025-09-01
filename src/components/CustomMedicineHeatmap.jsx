@@ -1,10 +1,25 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import '../css/CustomMedicineHeatmap.css';
 
-export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 320, cellMinWidth = 64 }) {
+/**
+ * props:
+ * - rows: [{ key, title, sub, data:[{date,dateFull,count,times[]}] }]
+ * - dates: [{ label, labelFull, iso }]
+ * - height?: number
+ * - cellMinWidth?: number
+ * - bottomSafe?: number   // "запретная" нижняя зона (px) — высота нижней панели. По умолчанию 96.
+ */
+export default function CustomMedicineHeatmap({
+  rows = [],
+  dates = [],
+  height = 320,
+  cellMinWidth = 64,
+  bottomSafe = 96, // нижняя панель/табы
+}) {
   const wrapRef = useRef(null);
   const ttRef = useRef(null);
 
+  // responsive
   const [wrapW, setWrapW] = useState(1024);
   const isMobile = wrapW < 540;
   const isTablet = wrapW >= 540 && wrapW < 900;
@@ -18,48 +33,9 @@ export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 
     return () => ro.disconnect();
   }, []);
 
-  const [tooltip, setTooltip] = useState(null);
+  // tooltip
+  const [tooltip, setTooltip] = useState(null); // {x,y, html}
   const [pinned, setPinned] = useState(false);
-
-  const clampToWrap = useCallback((x, y) => {
-    const wrap = wrapRef.current;
-    if (!wrap) return { x, y };
-    const r = wrap.getBoundingClientRect();
-    const tt = ttRef.current;
-    const pad = 6;
-
-    let w = 180, h = 120;
-    if (tt) {
-      const tr = tt.getBoundingClientRect();
-      w = tr.width;
-      h = tr.height;
-    }
-
-    const maxX = r.width - w - pad;
-    const maxY = r.height - h - pad;
-    return {
-      x: Math.max(pad, Math.min(x, Math.max(pad, maxX))),
-      y: Math.max(pad, Math.min(y, Math.max(pad, maxY))),
-    };
-  }, []);
-
-  const posFromEvent = useCallback((e, fallbackEl) => {
-    const wrapRect = wrapRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
-    let clientX, clientY;
-    if (e && typeof e.clientX === 'number') {
-      clientX = e.clientX; clientY = e.clientY;
-    } else if (e?.touches?.[0]) {
-      clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
-    } else if (fallbackEl) {
-      const r = fallbackEl.getBoundingClientRect();
-      clientX = r.left + r.width / 2; clientY = r.top + r.height / 2;
-    } else {
-      clientX = wrapRect.left + 10; clientY = wrapRect.top + 10;
-    }
-    const x = clientX - wrapRect.left + 8;
-    const y = clientY - wrapRect.top + 8;
-    return clampToWrap(x, y);
-  }, [clampToWrap]);
 
   const makeHtml = (rowTitle, cell) => {
     const timesHtml = cell.times && cell.times.length
@@ -73,54 +49,92 @@ export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 
     `;
   };
 
-  const showTooltip = useCallback((e, cell, rowTitle, targetEl) => {
-    const { x, y } = posFromEvent(e, targetEl);
-    setTooltip({ x, y, html: makeHtml(rowTitle, cell) });
-  }, [posFromEvent]);
+  /** Вычисляем позицию тултипа относительно ВЬЮПОРТА с авто-флипом вверх/вниз */
+  const calcPositionByCell = useCallback((cellEl) => {
+    const pad = 8; // "внешний" отступ от краёв
+    const arrowGap = 8; // зазор между ячейкой и тултипом
 
-  useEffect(() => {
-    if (!tooltip) return;
-    const adj = clampToWrap(tooltip.x, tooltip.y);
-    if (adj.x !== tooltip.x || adj.y !== tooltip.y) {
-      setTooltip(t => ({ ...t, ...adj }));
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const safeBottom = bottomSafe + (parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0);
+
+    const rect = cellEl.getBoundingClientRect();
+    // Базовая ширина/высота тултипа (если ещё не отрисован)
+    let tw = 240, th = 120;
+    if (ttRef.current) {
+      const tr = ttRef.current.getBoundingClientRect();
+      tw = tr.width;
+      th = tr.height;
     }
+
+    // Пытаемся поставить СНИЗУ от ячейки, центрируя по X
+    let x = rect.left + rect.width / 2 - tw / 2;
+    let y = rect.bottom + arrowGap;
+
+    // Если снизу не влезает — ставим ВЫШЕ ячейки
+    if (y + th > vh - safeBottom - pad) {
+      y = rect.top - th - arrowGap;
+    }
+    // Если и сверху не влезает — "прижимаем" к верхнему/нижнему краю
+    if (y < pad) y = pad;
+    if (y + th > vh - safeBottom - pad) y = vh - safeBottom - pad - th;
+
+    // Кламп по ширине вьюпорта
+    if (x < pad) x = pad;
+    if (x + tw > vw - pad) x = vw - pad - tw;
+
+    return { x, y };
+  }, [bottomSafe]);
+
+  const showTooltipByCell = useCallback((cell, rowTitle, cellEl) => {
+    const pos = calcPositionByCell(cellEl);
+    setTooltip({ x: pos.x, y: pos.y, html: makeHtml(rowTitle, cell) });
+  }, [calcPositionByCell]);
+
+  // при изменении размеров окна — поправить позицию закреплённого тултипа (если есть ref)
+  useEffect(() => {
     const onWinResize = () => {
-      setTooltip(t => t ? clampToWrap(t.x, t.y) : t);
+      if (!pinned || !ttRef.current) return;
+      // если закреплён — оставим на месте, но не даём вылезти за края
+      const tr = ttRef.current.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const pad = 8;
+      const safeBottom = bottomSafe + (parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0);
+
+      const nx = Math.max(pad, Math.min(tooltip.x, vw - pad - tr.width));
+      const ny = Math.max(pad, Math.min(tooltip.y, vh - safeBottom - pad - tr.height));
+      if (nx !== tooltip.x || ny !== tooltip.y) {
+        setTooltip(t => t ? { ...t, x: nx, y: ny } : t);
+      }
     };
     window.addEventListener('resize', onWinResize);
     return () => window.removeEventListener('resize', onWinResize);
-  }, [tooltip, clampToWrap]);
+  }, [pinned, tooltip, bottomSafe]);
 
-  const onCellEnter = (e, cell, rowTitle, el) => { if (!pinned) showTooltip(e, cell, rowTitle, el); };
-  const onCellMove  = (e) => {
-    if (!tooltip || pinned || !e?.clientX) return;
-    const wrapRect = wrapRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
-    const x = e.clientX - wrapRect.left + 8;
-    const y = e.clientY - wrapRect.top + 8;
-    const adj = clampToWrap(x, y);
-    setTooltip(t => t ? { ...t, ...adj } : t);
+  const onCellEnter = (e, cell, rowTitle) => {
+    if (pinned) return;
+    showTooltipByCell(cell, rowTitle, e.currentTarget);
   };
   const onCellLeave = () => { if (!pinned) setTooltip(null); };
 
-  const onCellClick = (e, cell, rowTitle, el) => {
+  const onCellClick = (e, cell, rowTitle) => {
     e.stopPropagation();
     setPinned(true);
-    showTooltip(e, cell, rowTitle, el);
-    if (e.currentTarget?.blur) e.currentTarget.blur();
+    showTooltipByCell(cell, rowTitle, e.currentTarget);
+    e.currentTarget?.blur?.();
   };
-
-  const onCellTouch = (e, cell, rowTitle, el) => {
+  const onCellTouch = (e, cell, rowTitle) => {
     e.stopPropagation();
     setPinned(true);
-    showTooltip(e, cell, rowTitle, el);
-    if (e.currentTarget?.blur) e.currentTarget.blur();
+    showTooltipByCell(cell, rowTitle, e.currentTarget);
+    e.currentTarget?.blur?.();
   };
-
-  const onKeyDown    = (e, cell, rowTitle, el) => {
+  const onKeyDown = (e, cell, rowTitle) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setPinned(true);
-      showTooltip(e, cell, rowTitle, el);
+      showTooltipByCell(cell, rowTitle, e.currentTarget);
     }
   };
 
@@ -141,8 +155,6 @@ export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 
       ref={wrapRef}
       className={`med-heat-wrap ${isMobile ? 'is-mobile' : isTablet ? 'is-tablet' : 'is-desktop'}`}
       style={{ height }}
-      onMouseMove={onCellMove}
-      onMouseLeave={onCellLeave}
       onClick={onWrapClick}
     >
       <div className="med-heat-grid" style={{ gridTemplateColumns: gridTemplate }}>
@@ -171,10 +183,11 @@ export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 
                   ? 'med-cell zero'
                   : (cell.count === 1 ? 'med-cell one' : (cell.count <= 3 ? 'med-cell few' : 'med-cell many'));
                 const handlers = {
-                  onMouseEnter: (e) => onCellEnter(e, cell, rowTitle, e.currentTarget),
-                  onClick: (e) => onCellClick(e, cell, rowTitle, e.currentTarget),
-                  onTouchStart: (e) => onCellTouch(e, cell, rowTitle, e.currentTarget),
-                  onKeyDown: (e) => onKeyDown(e, cell, rowTitle, e.currentTarget),
+                  onMouseEnter: (e) => onCellEnter(e, cell, rowTitle),
+                  onMouseLeave: onCellLeave,
+                  onClick: (e) => onCellClick(e, cell, rowTitle),
+                  onTouchStart: (e) => onCellTouch(e, cell, rowTitle),
+                  onKeyDown: (e) => onKeyDown(e, cell, rowTitle),
                 };
                 return (
                   <div
@@ -194,7 +207,11 @@ export default function CustomMedicineHeatmap({ rows = [], dates = [], height = 
       </div>
 
       {tooltip && (
-        <div ref={ttRef} className="med-heat-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+        <div
+          ref={ttRef}
+          className="med-heat-tooltip"
+          style={{ left: tooltip.x, top: tooltip.y, position: 'fixed' }} // фикс к вьюпорту
+        >
           <div dangerouslySetInnerHTML={{ __html: tooltip.html }} />
         </div>
       )}

@@ -2,16 +2,13 @@
   position: relative;
   width: 100%;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
   background: #fff;
   border-radius: 12px;
 }
 
-.med-heat-head.med-heat-left {
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.med-heat-wrap.is-mobile {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 .med-heat-grid {
@@ -26,16 +23,21 @@
   font-weight: 700;
   font-size: 13px;
   color: #374151;
-  text-align: center;
   padding: 8px 6px;
   background: #f9fafb;
   border: 1px solid #eef2f7;
   border-radius: 8px;
   line-height: 1.2;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.med-heat-left { text-align: left; }
-.med-heat-date { text-align: center; }
+.med-heat-head.med-heat-left {
+  text-align: center;
+  justify-content: center;
+}
 
 .med-heat-leftcell {
   display: flex;
@@ -68,10 +70,7 @@
 }
 .med-cell:focus,
 .med-cell:focus-visible,
-.med-cell:active {
-  outline: none !important;
-  box-shadow: none !important;
-}
+.med-cell:active { outline: none !important; box-shadow: none !important; }
 .med-cell:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
 .med-cell.zero { background: #f9fafb; color: #9ca3af; }
@@ -83,8 +82,8 @@
 .med-dot   { font-size: 14px; color: #9ca3af; }
 
 .med-heat-tooltip {
-  position: absolute;
-  z-index: 10;
+  position: fixed;
+  z-index: 999;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 10px 24px rgba(0,0,0,.12);
@@ -92,6 +91,7 @@
   max-width: 280px;
   pointer-events: none;
 }
+
 .med-heat-tooltip .tt-title { font-weight: 800; margin-bottom: 2px; font-size: 13px; }
 .med-heat-tooltip .tt-date  { color: #374151; margin-bottom: 6px; font-size: 12px; }
 .med-heat-tooltip .tt-count { margin-bottom: 4px; font-size: 13px; }
