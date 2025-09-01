@@ -17,6 +17,9 @@ function DoctorChartsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ← добавлено: состояние для лекарств
+  const [medicines, setMedicines] = useState([]);
+
   const inputRef = useRef(null);
 
   const get14DaysRange = () => {
@@ -84,6 +87,7 @@ function DoctorChartsPage() {
     setAttacksData([]);
     setSpirometryData([]);
     setZones(null);
+    setMedicines([]); // очистим лекарства при новом поиске
     if (!searchOms) return;
 
     try {
@@ -136,11 +140,33 @@ function DoctorChartsPage() {
     }
   };
 
+  // ← добавлено: загрузка назначенных лекарств «как в userpage»
+  useEffect(() => {
+    if (!patient?.id) return;
+
+    const fetchMedicines = async () => {
+      try {
+        const response = await fetch(`${API_URL}/medicine/by-patient?patient_id=${patient.id}`);
+        if (!response.ok) throw new Error('Ошибка загрузки лекарств');
+
+        const data = await response.json();
+        // поведение как в UserPage: берём максимум 2 записи
+        setMedicines(Array.isArray(data) ? data.slice(0, 2) : []);
+      } catch (err) {
+        console.error('Ошибка при получении лекарств:', err);
+        setMedicines([]);
+      }
+    };
+
+    fetchMedicines();
+  }, [patient, API_URL]);
+
   const handleClear = () => {
     setPatient(null);
     setAttacksData([]);
     setSpirometryData([]);
     setZones(null);
+    setMedicines([]);
     setError('');
     setSearchOms('');
     try { localStorage.removeItem(LS_KEY); } catch {}
@@ -202,6 +228,53 @@ function DoctorChartsPage() {
     </div>
   );
 
+  // ← добавлено: блок «Назначенные лекарства»
+  const MedicinesBlock = () => (
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 14,
+        padding: '12px 14px 16px',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.06)',
+        marginBottom: 16,
+      }}
+    >
+      <div style={{ fontWeight: 700, textAlign: 'left', margin: '4px 0 12px', fontSize: 16 }}>
+        💊 Назначенные лекарства
+      </div>
+
+      {medicines.length === 0 ? (
+        <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
+          Нет назначенных лекарств
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 12,
+          }}
+        >
+          {medicines.map((med, idx) => (
+            <div
+              key={`${med.name}-${idx}`}
+              style={{
+                backgroundColor: '#fff',
+                border: '1px solid #eee',
+                borderRadius: 12,
+                padding: '12px',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{med.name}</div>
+              <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg} мкг</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   const ChartCard = ({ title, children }) => (
     <div
       style={{
@@ -253,6 +326,9 @@ function DoctorChartsPage() {
           {error && <p style={{ textAlign: 'center', color: '#c00', marginBottom: 12 }}>{error}</p>}
 
           {patient && <PatientCard p={patient} />}
+
+          {/* ← добавлено: блок лекарств сразу под карточкой пациента */}
+          {patient && <MedicinesBlock />}
 
           {patient && (
             <>
