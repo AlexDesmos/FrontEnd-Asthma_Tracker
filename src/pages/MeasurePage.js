@@ -10,6 +10,14 @@ function MeasurePage({ userId }) {
   const [peakFlow, setPeakFlow] = useState('');
   const [medicines, setMedicines] = useState([]);
 
+  const SCALE_HINTS = [
+    { n: 1, title: 'Очень лёгкий', text: 'Лёгкое покашливание, дыхание почти как обычно.' },
+    { n: 2, title: 'Лёгкий', text: 'Небольшая одышка при активности, без ночных симптомов.' },
+    { n: 3, title: 'Умеренный', text: 'Регулярные симптомы, мешают делам, возможны ночные пробуждения.' },
+    { n: 4, title: 'Тяжёлый', text: 'Одышка даже в покое, спасательное лекарство помогает слабо.' },
+    { n: 5, title: 'Угрожающий жизни', text: 'Трудно говорить, выраженная слабость/синюшность — срочно нужна помощь.' },
+  ];
+
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -124,7 +132,11 @@ function MeasurePage({ userId }) {
                   placeholder="50 - 950"
                   inputMode="numeric"
                 />
-                <button className="mp-spirometry__send" onClick={handleSendSpirometry} aria-label="Отправить показание">
+                <button
+                  className="mp-spirometry__send"
+                  onClick={handleSendSpirometry}
+                  aria-label="Отправить показание"
+                >
                   ➔
                 </button>
               </div>
@@ -135,53 +147,23 @@ function MeasurePage({ userId }) {
         </main>
       </div>
 
+      {/* Фиксированная кнопка «Приступ» */}
       <button className="mp-attack" onClick={handleAttackClick} aria-label="Сообщить о приступе">
         Приступ
       </button>
 
+      {/* Модальное окно выбора тяжести */}
       {showModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              padding: 24,
-              borderRadius: 16,
-              width: '92%',
-              maxWidth: 360,
-              textAlign: 'center',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
-            }}
-          >
-            <h3 style={{ marginBottom: 6 }}>Насколько сильный приступ?</h3>
-            <p style={{ marginBottom: 16, fontSize: 14, color: '#6b7280' }}>1 — не сильный, 5 — очень сильный</p>
+        <div className="attack-modal-overlay">
+          <div className="attack-modal">
+            <h3>Насколько сильный приступ?</h3>
+            <p>1 — не сильный, 5 — очень сильный</p>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div className="attack-buttons">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   onClick={() => handleSelectScale(n)}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    backgroundColor: '#e53935',
-                    color: '#fff',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 3px 10px rgba(229,57,53,0.3)',
-                  }}
                   aria-label={`Тяжесть ${n}`}
                   title={`Тяжесть ${n}`}
                 >
@@ -190,24 +172,26 @@ function MeasurePage({ userId }) {
               ))}
             </div>
 
-            <button
-              onClick={() => setShowModal(false)}
-              style={{
-                marginTop: 12,
-                padding: '10px 14px',
-                borderRadius: 12,
-                border: '1px solid #e5e7eb',
-                background: '#fff',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
+            <div className="attack-hints">
+              {SCALE_HINTS.map((hint) => (
+                <div key={hint.n} className={`attack-hint ${hint.n === 5 ? 'danger' : ''}`}>
+                  <div className="attack-hint-num">{hint.n}</div>
+                  <div>
+                    <div className="attack-hint-text-title">{hint.title}</div>
+                    <div className="attack-hint-text-body">{hint.text}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="attack-close" onClick={() => setShowModal(false)}>
               Закрыть
             </button>
           </div>
         </div>
       )}
 
+      {/* Уведомление */}
       {showSuccess && (
         <div
           style={{
