@@ -2,9 +2,10 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Header from '../components/Header';
 import CustomAttacksChart from '../components/CustomAttacksChart';
 import CustomPefChart from '../components/CustomPefChart';
+import CustomMedicineHeatmap from '../components/CustomMedicineHeatmap';
 import { buildPefZonesForPatient } from '../utils/pefZones';
 
-const LS_KEY = 'doctor_charts_state_v1';
+const LS_KEY = 'doctor_charts_state_v2';
 
 function DoctorChartsPage() {
   const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
@@ -17,17 +18,27 @@ function DoctorChartsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ← добавлено: состояние для лекарств
   const [medicines, setMedicines] = useState([]);
+
+  const [medRows, setMedRows] = useState([]);
+  const [medDates, setMedDates] = useState([]);
 
   const inputRef = useRef(null);
 
-  const get14DaysRange = () => {
+  const ymdLocal = (input) => {
+    const d = (input instanceof Date) ? input : new Date(input);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getDaysRange = (n = 14) => {
     const end = new Date();
-    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 13);
+    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (n - 1));
     return [start, end];
   };
-  const toIso = (d) => d.toISOString().slice(0, 10);
+  const toIso = (d) => ymdLocal(d);
 
   const fmtShortDate = (iso) => {
     const d = new Date(iso);
@@ -38,6 +49,22 @@ function DoctorChartsPage() {
     const date = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '-');
     const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     return `${date} ${time}`;
+  };
+  const fmtTime = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const buildLastNDates = (n = 7) => {
+    const arr = [];
+    const now = new Date();
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const label = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }).replace(/\./g, '-');
+      const labelFull = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '-');
+      arr.push({ label, labelFull, iso: ymdLocal(d) });
+    }
+    return arr;
   };
 
   const getAgeYears = (isoDate) => {
@@ -71,15 +98,17 @@ function DoctorChartsPage() {
       if (Array.isArray(saved?.spirometryData)) setSpirometryData(saved.spirometryData);
       if (saved?.zones) setZones(saved.zones);
       if (typeof saved?.searchOms === 'string') setSearchOms(saved.searchOms);
+      if (Array.isArray(saved?.medRows)) setMedRows(saved.medRows);
+      if (Array.isArray(saved?.medDates)) setMedDates(saved.medDates);
     } catch {  }
   }, []);
 
   useEffect(() => {
-    const stateToSave = { patient, attacksData, spirometryData, zones, searchOms };
+    const stateToSave = { patient, attacksData, spirometryData, zones, searchOms, medRows, medDates };
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(stateToSave));
     } catch { /* ignore quota */ }
-  }, [patient, attacksData, spirometryData, zones, searchOms]);
+  }, [patient, attacksData, spirometryData, zones, searchOms, medRows, medDates]);
 
   const handleSearch = async () => {
     setError('');
@@ -87,7 +116,9 @@ function DoctorChartsPage() {
     setAttacksData([]);
     setSpirometryData([]);
     setZones(null);
-    setMedicines([]); // очистим лекарства при новом поиске
+    setMedicines([]);
+    setMedRows([]);
+    setMedDates([]);
     if (!searchOms) return;
 
     try {
@@ -102,11 +133,13 @@ function DoctorChartsPage() {
         const z = buildPefZonesForPatient(p);
         setZones(z);
 
-        const [start, end] = get14DaysRange();
+        const [start14, end14] = getDaysRange(14);
+        const [start7, end7] = getDaysRange(7);
 
-        const [attacksRes, spiroRes] = await Promise.all([
-          fetch(`${API_URL}/attacks?patient_id=${p.id}&start_date=${toIso(start)}&end_date=${toIso(end)}`),
-          fetch(`${API_URL}/spirometry?patient_id=${p.id}&start_date=${toIso(start)}&end_date=${toIso(end)}`),
+        const [attacksRes, spiroRes, medsTakeRes] = await Promise.all([
+          fetch(`${API_URL}/attacks?patient_id=${p.id}&start_date=${toIso(start14)}&end_date=${toIso(end14)}`),
+          fetch(`${API_URL}/spirometry?patient_id=${p.id}&start_date=${toIso(start14)}&end_date=${toIso(end14)}`),
+          fetch(`${API_URL}/medicine/taking-medicine?patient_id=${p.id}&start_date=${toIso(start7)}&end_date=${toIso(end7)}`),
         ]);
 
         let attacks = [];
@@ -130,6 +163,50 @@ function DoctorChartsPage() {
           }));
         }
         setSpirometryData(spiro);
+
+        try {
+          const items = medsTakeRes.ok ? (await medsTakeRes.json()) : [];
+          const dates = buildLastNDates(7);
+          setMedDates(dates);
+
+          const map = new Map();
+          for (const it of items) {
+            const key = `${it.medicine_name || 'Неизвестно'}|${it.mkg ?? ''}`;
+            if (!map.has(key)) {
+              map.set(key, {
+                title: it.medicine_name || 'Неизвестно',
+                sub: (it.mkg != null && it.mkg !== '') ? `${it.mkg} мкг` : '',
+                daily: new Map(),
+              });
+            }
+            const bucket = map.get(key);
+            const dateIso = ymdLocal(it.date_time);
+            const time = fmtTime(it.date_time);
+            const arr = bucket.daily.get(dateIso) || [];
+            arr.push(time);
+            bucket.daily.set(dateIso, arr);
+          }
+          const rows = Array.from(map.entries())
+            .sort((a, b) => a[1].title.localeCompare(b[1].title, 'ru'))
+            .map(([key, val]) => {
+              const data = dates.map((d) => {
+                const times = val.daily.get(d.iso) || [];
+                return {
+                  date: d.label,
+                  dateFull: d.labelFull,
+                  count: times.length,
+                  times: times.sort((t1, t2) => t1.localeCompare(t2, 'ru')),
+                };
+              });
+              return { key, title: val.title, sub: val.sub, data };
+            });
+
+          setMedRows(rows);
+        } catch {
+          setMedRows([]);
+          setMedDates(buildLastNDates(7));
+        }
+
       } else {
         setError('Пациент не найден');
       }
@@ -140,7 +217,6 @@ function DoctorChartsPage() {
     }
   };
 
-  // ← добавлено: загрузка назначенных лекарств «как в userpage»
   useEffect(() => {
     if (!patient?.id) return;
 
@@ -150,7 +226,6 @@ function DoctorChartsPage() {
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
-        // поведение как в UserPage: берём максимум 2 записи
         setMedicines(Array.isArray(data) ? data.slice(0, 2) : []);
       } catch (err) {
         console.error('Ошибка при получении лекарств:', err);
@@ -167,6 +242,8 @@ function DoctorChartsPage() {
     setSpirometryData([]);
     setZones(null);
     setMedicines([]);
+    setMedRows([]);
+    setMedDates([]);
     setError('');
     setSearchOms('');
     try { localStorage.removeItem(LS_KEY); } catch {}
@@ -228,7 +305,6 @@ function DoctorChartsPage() {
     </div>
   );
 
-  // ← добавлено: блок «Назначенные лекарства»
   const MedicinesBlock = () => (
     <div
       style={{
@@ -326,8 +402,6 @@ function DoctorChartsPage() {
           {error && <p style={{ textAlign: 'center', color: '#c00', marginBottom: 12 }}>{error}</p>}
 
           {patient && <PatientCard p={patient} />}
-
-          {/* ← добавлено: блок лекарств сразу под карточкой пациента */}
           {patient && <MedicinesBlock />}
 
           {patient && (
@@ -356,6 +430,14 @@ function DoctorChartsPage() {
                     minPxPerPoint={56}
                     maxXTicks={8}
                   />
+                )}
+              </ChartCard>
+
+              <ChartCard title="Приём лекарств (последние 7 дней)">
+                {medRows.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#6b7280', margin: 0 }}>Нет данных</p>
+                ) : (
+                  <CustomMedicineHeatmap rows={medRows} dates={medDates} height={320} />
                 )}
               </ChartCard>
             </>
