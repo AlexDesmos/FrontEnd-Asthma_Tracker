@@ -68,7 +68,7 @@ function UserPage({ userOms, onLogout }) {
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
-        setMedicines(Array.isArray(data) ? data.slice(0, 2) : []);
+        setMedicines(Array.isArray(data) ? data.slice(0, 4) : []);
       } catch (err) {
         console.error('Ошибка при получении лекарств:', err);
         setMedicines([]);
