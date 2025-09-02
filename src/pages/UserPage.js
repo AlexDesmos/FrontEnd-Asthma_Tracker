@@ -254,7 +254,7 @@ function UserPage({ userOms, onLogout }) {
                           <div style={{ fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>
                             {med.name}
                           </div>
-                          <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg} мкг</div>
+                          <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg}</div>
                         </div>
                       ))}
                     </div>

@@ -110,7 +110,7 @@ function MeasurePage({ userId }) {
                 {medicines.map((m) => (
                   <div key={m.id} className="mp-med">
                     <div className="mp-med__name">{m.name}</div>
-                    <div className="mp-med__dose">{m.mkg} мкг</div>
+                    <div className="mp-med__dose">{m.mkg}</div>
                     <button className="mp-med__btn" onClick={() => handleTakeMedication(m.id)}>
                       Принять
                     </button>
