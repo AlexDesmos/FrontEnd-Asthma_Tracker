@@ -284,7 +284,7 @@ function DoctorChartsPage() {
             <div className="card">
               <div className="card-header">
                 <div className="card-title">Карточка пациента</div>
-                <button className="btn btn-gray small" onClick={handleClear} title="Очистить">×</button>
+                <button className="btn small" onClick={handleClear} title="Очистить">×</button>
               </div>
               <div className="info-grid">
                 <Info label="👤 ФИО" value={`${patient.surname || ''} ${patient.name || ''} ${patient.patronymic || ''}`.trim()} />
