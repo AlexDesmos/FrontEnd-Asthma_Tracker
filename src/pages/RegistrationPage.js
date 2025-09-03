@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://астматрекер.рф/api';
+
 function RegistrationPage() {
   const [oms, setOms] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +25,7 @@ function RegistrationPage() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/patients/register', {
+      const response = await fetch(`${API_URL}/patients/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ oms, password })
