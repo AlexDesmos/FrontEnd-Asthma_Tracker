@@ -204,7 +204,7 @@ function DoctorChartsPage() {
         if (!response.ok) throw new Error('Ошибка загрузки лекарств');
 
         const data = await response.json();
-        setMedicines(Array.isArray(data) ? data.slice(0, 2) : []);
+        setMedicines(Array.isArray(data) ? data.slice(0, 4) : []);
       } catch (err) {
         console.error('Ошибка при получении лекарств:', err);
         setMedicines([]);
@@ -321,7 +321,7 @@ function DoctorChartsPage() {
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 14 }}>{med.name}</div>
-              <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg} мкг</div>
+              <div style={{ fontSize: 13, color: '#4b5563' }}>{med.mkg}</div>
             </div>
           ))}
         </div>
